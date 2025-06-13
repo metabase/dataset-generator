@@ -1,69 +1,116 @@
 # Dataset Generator
 
-**Type a topic, get a dataset, and start exploring in Metabase—no coding required.**
+**Generate realistic synthetic datasets with a structured prompt and explore them instantly in Metabase.**
 
-This tool lets you type a topic (like “open source”, “Elon Musk”, “startups”), scrapes public data from Twitter using `snscrape`, and gives you a downloadable CSV or the option to push it to a PostgreSQL database.
+## What's New
 
-Perfect for:
+- **Metabase now spins up on demand:** Click "Explore in Metabase" and the required Docker containers start automatically. Stop them with a single click.
+- **No more always-on Docker Compose:** Only Postgres and Metabase are started as needed.
+- **No more Twitter scraping or Python scraper.** The app is now focused on synthetic data generation via OpenAI and instant analytics.
 
-- Quickly building a dataset for analysis
-- Exploring public sentiment and discussion
-- Creating demo dashboards in Metabase
+---
+
+## Prerequisites
+
+- [Docker](https://www.docker.com/get-started) (includes Docker Compose)
+- No local Node.js or PostgreSQL required
+
+---
+
+## Features
+
+- Conversational, structured prompt builder for dataset generation
+- Preview data instantly in the browser
+- Export as CSV or SQL (Snowflake-compatible batching)
+- One-click "Explore in Metabase" (runs Metabase + Postgres in Docker only when needed)
+- One-click "Stop Metabase" to clean up containers
+- All UI built with Next.js App Router, Tailwind CSS, and ShadCN UI
+
+---
 
 ## Stack
 
-- **Next.js** – Fullstack React framework
-- **Tailwind CSS + ShadCN** – Clean UI components
-- **snscrape** – Twitter scraping (no auth needed)
-- **OpenAI (optional)** – For sentiment/enrichment
-- **PostgreSQL** – Data storage
-- **Metabase** – Explore and visualize your dataset
+- **Next.js** (App Router, TypeScript)
+- **Tailwind CSS + ShadCN UI** (modern, dark UI)
+- **OpenAI API** (for synthetic data)
+- **PostgreSQL** (Docker, only runs when needed)
+- **Metabase** (Docker, only runs when needed)
 
-## Setup
+---
 
-1. Clone the repo and run:
+## Getting Started
 
-```bash
-npm install
-```
+1. **Clone the repo:**
 
-2. Start the database and Metabase with:
+   ```bash
+   git clone <your-repo-url>
+   cd dataset-generator
+   ```
 
-```bash
-docker-compose up
-```
+2. **Start the Next.js app:**
 
-3. Add a `.env.local` with:
+   ```bash
+   npm install
+   npm run dev
+   ```
 
-```env
-OPENAI_API_KEY=your-key
-DATABASE_URL=postgres://postgres:password@localhost:5432/dataset_generator
-```
+   - The app runs at [http://localhost:3000](http://localhost:3000)
 
-4. Run the app:
+3. **Generate a dataset:**
 
-```bash
-npm run dev
-```
+   - Use the prompt builder to define your dataset.
+   - Click "Preview Data" to see a sample.
 
-## Database & Schema
+4. **Export or Explore:**
+   - Download as CSV or SQL.
+   - Click "Explore in Metabase" to spin up Metabase and Postgres in Docker. The app will open Metabase in a new tab when ready.
+   - When done, click "Stop Metabase" to shut down and clean up Docker containers.
 
-- All SQL scripts (schema, init, etc.) are in the `db/` directory.
-- The main app database is `dataset_generator`.
-- Metabase uses its own internal database: `metabase_internal` (created automatically by the init script).
-- Docker Compose exposes Postgres on port 5432 and Metabase on port 3001.
+---
 
-The main table `generated_data` stores results:
+## Metabase On-Demand
 
-```sql
-create table generated_data (
-  id serial primary key,
-  topic text,
-  platform text,
-  source_id text,
-  author text,
-  content text,
-  timestamp timestamptz,
-  metadata jsonb
-);
-```
+- The app manages Docker for you. No need to run `docker-compose up` manually.
+- Metabase and Postgres containers are started only when you click "Explore in Metabase."
+- You can stop them with the "Stop Metabase" button.
+
+---
+
+## Development
+
+- Edit your code and restart the Next.js dev server to see changes.
+- No need to run or manage Docker containers unless you want to use Metabase.
+
+---
+
+## Project Structure
+
+- `/app/page.tsx` – Main UI and prompt builder
+- `/app/api/generate/route.ts` – Synthetic data generator (OpenAI)
+- `/app/api/metabase/start|stop|status/route.ts` – Docker orchestration for Metabase/Postgres
+- `/lib/export/` – CSV/SQL export logic
+- `/docker-compose.yml` – Used only for Metabase/Postgres, not for the app itself
+
+---
+
+## Example Use Cases
+
+- "SaaS dashboard data with 3 years of MRR and churn"
+- "Ecommerce dataset with product orders and customer regions"
+- "Flat table of startup marketing campaigns and results"
+
+---
+
+## Environment
+
+- `.env.local` – Add your `OPENAI_API_KEY` and `DATABASE_URL` if needed
+
+---
+
+## Contributing
+
+Pull requests are welcome! If you have ideas, bugfixes, or want to add features, feel free to open an issue or PR. All contributions, feedback, and suggestions are appreciated.
+
+---
+
+MIT License
