@@ -3,6 +3,14 @@
 import { useState, useRef } from "react";
 import React from "react";
 import { toast } from "sonner";
+import JSZip from "jszip";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Prompt {
   rowCount: number;
@@ -19,10 +27,10 @@ export default function Home() {
     rowCount: 10,
     schemaType: "flat",
     businessType: "SaaS",
-    timeRange: "2021–2023",
+    timeRange: "2025",
     growthPattern: "steady",
     variationLevel: "medium",
-    granularity: "monthly",
+    granularity: "daily",
   });
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -43,16 +51,21 @@ export default function Home() {
     "Education",
     "Retail",
   ];
-  const timeRangeOptions = ["2021–2022", "2022–2023", "2020–2024", "2019–2023"];
+  const timeRangeOptions = ["2023", "2024", "2025"];
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
-    setPrompt((prev) => ({
-      ...prev,
-      [name]: name === "rowCount" ? Number(value) : value,
-    }));
+    const { name, value, type } = e.target;
+    if (name === "rowCount") {
+      setPrompt((prev) => ({ ...prev, rowCount: Number(value) }));
+    } else if (name === "schemaType") {
+      setPrompt((prev) => ({ ...prev, schemaType: value }));
+    } else if (name === "timeRange") {
+      setPrompt((prev) => ({ ...prev, timeRange: value }));
+    } else {
+      setPrompt((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handlePreview = async () => {
@@ -78,69 +91,195 @@ export default function Home() {
   // Helper to render table from array of objects
   const renderTable = (data: any) => {
     const minRows = 10;
-    if (!Array.isArray(data) || data.length === 0)
+    if (!data || !data.tables || data.tables.length === 0)
       return <div className="text-gray-400">No data</div>;
-    const columns = Object.keys(data[0]);
-    const emptyRows = minRows - data.length > 0 ? minRows - data.length : 0;
-    return (
-      <div className="overflow-x-auto h-full flex flex-col justify-center pb-6">
-        <table className="min-w-full h-full table-fixed border border-zinc-700 rounded-lg text-sm">
-          <thead>
-            <tr>
-              {columns.map((col) => (
-                <th
-                  key={col}
-                  className="px-3 py-2 bg-zinc-800 text-blue-300 font-semibold border-b border-zinc-700 text-left"
-                >
-                  {col}
-                </th>
+    if (data.tables.length === 1) {
+      const table = data.tables[0];
+      if (!Array.isArray(table.rows) || table.rows.length === 0)
+        return <div className="text-gray-400">No data</div>;
+      const columns = Object.keys(table.rows[0]);
+      const emptyRows =
+        minRows - table.rows.length > 0 ? minRows - table.rows.length : 0;
+      return (
+        <div className="overflow-x-auto h-full flex flex-col justify-center pb-6">
+          <table className="min-w-full h-full table-fixed border border-zinc-700 rounded-lg text-sm">
+            <thead>
+              <tr>
+                {columns.map((col) => (
+                  <th
+                    key={col}
+                    className="px-3 py-2 bg-zinc-800 text-blue-300 font-semibold border-b border-zinc-700 text-left"
+                  >
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="h-full">
+              {table.rows.map((row: any, i: number) => (
+                <tr key={i} className="even:bg-zinc-900 odd:bg-zinc-950">
+                  {columns.map((col) => (
+                    <td
+                      key={col}
+                      className="px-3 py-2 border-b border-zinc-800 text-white"
+                    >
+                      {row[col]}
+                    </td>
+                  ))}
+                </tr>
               ))}
-            </tr>
-          </thead>
-          <tbody className="h-full">
-            {data.map((row: any, i: number) => (
-              <tr key={i} className="even:bg-zinc-900 odd:bg-zinc-950">
-                {columns.map((col) => (
-                  <td
-                    key={col}
-                    className="px-3 py-2 border-b border-zinc-800 text-white"
-                  >
-                    {row[col]}
-                  </td>
-                ))}
-              </tr>
-            ))}
-            {/* Render empty rows to fill space */}
-            {Array.from({ length: emptyRows }).map((_, i) => (
-              <tr
-                key={`empty-${i}`}
-                className="even:bg-zinc-900 odd:bg-zinc-950"
+              {Array.from({ length: emptyRows }).map((_, i) => (
+                <tr
+                  key={`empty-${i}`}
+                  className="even:bg-zinc-900 odd:bg-zinc-950"
+                >
+                  {columns.map((col) => (
+                    <td
+                      key={col}
+                      className="px-3 py-2 border-b border-zinc-800 text-white"
+                    >
+                      &nbsp;
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div>
+            <div className="text-xs text-gray-400 mt-2">
+              Showing first {Math.max(table.rows.length, minRows)} rows
+            </div>
+            <div className="flex gap-6 mt-10">
+              <button
+                onClick={() => {
+                  const csv = toCSV(table.rows);
+                  const blob = new Blob([csv], { type: "text/csv" });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "dataset.csv";
+                  a.click();
+                }}
+                className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
               >
-                {columns.map((col) => (
-                  <td
-                    key={col}
-                    className="px-3 py-2 border-b border-zinc-800 text-white"
-                  >
-                    &nbsp;
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div>
-          <div className="text-xs text-gray-400 mt-2">
-            Showing first {Math.max(data.length, minRows)} rows
+                Download CSV
+              </button>
+              <button
+                onClick={() => {
+                  const sql = toSQL(table.rows);
+                  const blob = new Blob([sql], { type: "text/plain" });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "dataset.sql";
+                  a.click();
+                }}
+                className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+              >
+                Download SQL
+              </button>
+              {isMetabaseRunning ? (
+                <button
+                  onClick={stopMetabase}
+                  disabled={isInstallingMetabase}
+                  className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+                >
+                  Stop Metabase
+                </button>
+              ) : (
+                <button
+                  onClick={startMetabase}
+                  disabled={isInstallingMetabase || !data || !data.length}
+                  className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+                >
+                  {isInstallingMetabase
+                    ? "Installing..."
+                    : "Explore in Metabase"}
+                </button>
+              )}
+            </div>
           </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="space-y-8">
+          {data.tables.map((table: any, tableIndex: number) => {
+            if (!Array.isArray(table.rows) || table.rows.length === 0)
+              return null;
+            const columns = Object.keys(table.rows[0]);
+            const emptyRows =
+              minRows - table.rows.length > 0 ? minRows - table.rows.length : 0;
+            return (
+              <div key={tableIndex} className="overflow-x-auto">
+                <h3 className="text-lg font-bold mb-2">
+                  {table.name || `Table ${tableIndex + 1}`}
+                </h3>
+                <table className="min-w-full table-fixed border border-zinc-700 rounded-lg text-sm">
+                  <thead>
+                    <tr>
+                      {columns.map((col) => (
+                        <th
+                          key={col}
+                          className="px-3 py-2 bg-zinc-800 text-blue-300 font-semibold border-b border-zinc-700 text-left"
+                        >
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {table.rows.map((row: any, i: number) => (
+                      <tr key={i} className="even:bg-zinc-900 odd:bg-zinc-950">
+                        {columns.map((col) => (
+                          <td
+                            key={col}
+                            className="px-3 py-2 border-b border-zinc-800 text-white"
+                          >
+                            {row[col]}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                    {Array.from({ length: emptyRows }).map((_, i) => (
+                      <tr
+                        key={`empty-${i}`}
+                        className="even:bg-zinc-900 odd:bg-zinc-950"
+                      >
+                        {columns.map((col) => (
+                          <td
+                            key={col}
+                            className="px-3 py-2 border-b border-zinc-800 text-white"
+                          >
+                            &nbsp;
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="text-xs text-gray-400 mt-2">
+                  Showing first {Math.max(table.rows.length, minRows)} rows
+                </div>
+              </div>
+            );
+          })}
           <div className="flex gap-6 mt-10">
             <button
-              onClick={() => {
-                const csv = toCSV(data);
-                const blob = new Blob([csv], { type: "text/csv" });
-                const url = window.URL.createObjectURL(blob);
+              onClick={async () => {
+                const zip = new JSZip();
+                data.tables.forEach((table: any, index: number) => {
+                  const csv = toCSV(table.rows);
+                  const fileName = table.name
+                    ? `${table.name}.csv`
+                    : `table_${index + 1}.csv`;
+                  zip.file(fileName, csv);
+                });
+                const content = await zip.generateAsync({ type: "blob" });
+                const url = window.URL.createObjectURL(content);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = "dataset.csv";
+                a.download = "dataset.zip";
                 a.click();
               }}
               className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
@@ -149,7 +288,9 @@ export default function Home() {
             </button>
             <button
               onClick={() => {
-                const sql = toSQL(data);
+                const sql = data.tables
+                  .map((table: any) => toSQL(table.rows))
+                  .join("\n\n");
                 const blob = new Blob([sql], { type: "text/plain" });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
@@ -180,8 +321,8 @@ export default function Home() {
             )}
           </div>
         </div>
-      </div>
-    );
+      );
+    }
   };
 
   // Utility: Convert array of objects to CSV
@@ -393,79 +534,158 @@ export default function Home() {
           </h1>
         </header>
         <main className="mb-8">
-          <p className="text-lg text-white/90 leading-relaxed text-left max-w-3xl">
-            I want to generate a
-            <select
-              name="rowCount"
-              value={prompt.rowCount}
-              onChange={handleChange}
-              className="align-middle inline-block mx-1 underline underline-offset-4 decoration-blue-400 bg-transparent text-blue-400 focus:outline-none transition-colors duration-150 w-auto min-w-[60px] max-w-[120px] appearance-none"
+          <p className="text-lg text-white/90 leading-relaxed text-left max-w-2xl">
+            I want to generate a{" "}
+            <Select
+              value={String(prompt.rowCount)}
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, rowCount: Number(value) }))
+              }
             >
-              {rowCountOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-            row dataset for a
-            <select
-              name="businessType"
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-800 text-white">
+                {rowCountOptions.map((opt) => (
+                  <SelectItem
+                    key={opt}
+                    value={String(opt)}
+                    className="text-sm font-medium"
+                  >
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>{" "}
+            row dataset for a{" "}
+            <Select
               value={prompt.businessType}
-              onChange={handleChange}
-              className="align-middle inline-block mx-1 underline underline-offset-4 decoration-blue-400 bg-transparent text-blue-400 focus:outline-none transition-colors duration-150 w-auto min-w-[60px] max-w-[120px] appearance-none"
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, businessType: value }))
+              }
             >
-              {businessTypeOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-            business, covering
-            <select
-              name="timeRange"
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-800 text-white">
+                {businessTypeOptions.map((opt) => (
+                  <SelectItem
+                    key={opt}
+                    value={opt}
+                    className="text-sm font-medium"
+                  >
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>{" "}
+            business, using{" "}
+            <Select
+              value={prompt.schemaType}
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, schemaType: value }))
+              }
+            >
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-800 text-white">
+                <SelectItem value="flat" className="text-sm font-medium">
+                  One Table (Flat)
+                </SelectItem>
+                <SelectItem value="star" className="text-sm font-medium">
+                  Multiple Tables (Star Schema)
+                </SelectItem>
+              </SelectContent>
+            </Select>{" "}
+            schema, covering{" "}
+            <Select
               value={prompt.timeRange}
-              onChange={handleChange}
-              className="align-middle inline-block mx-1 underline underline-offset-4 decoration-blue-400 bg-transparent text-blue-400 focus:outline-none transition-colors duration-150 w-auto min-w-[90px] max-w-[140px] appearance-none"
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, timeRange: value }))
+              }
             >
-              {timeRangeOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-            with
-            <select
-              name="growthPattern"
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-800 text-white">
+                {timeRangeOptions.map((opt) => (
+                  <SelectItem
+                    key={opt}
+                    value={opt}
+                    className="text-sm font-medium"
+                  >
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>{" "}
+            with{" "}
+            <Select
               value={prompt.growthPattern}
-              onChange={handleChange}
-              className="align-middle inline-block mx-1 underline underline-offset-4 decoration-blue-400 bg-transparent text-blue-400 focus:outline-none transition-colors duration-150 w-auto min-w-[60px] max-w-[120px] appearance-none"
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, growthPattern: value }))
+              }
             >
-              <option value="steady">steady</option>
-              <option value="positive">positive</option>
-              <option value="negative">negative</option>
-            </select>
-            growth,
-            <select
-              name="variationLevel"
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-800 text-white">
+                <SelectItem value="steady" className="text-sm font-medium">
+                  steady
+                </SelectItem>
+                <SelectItem value="positive" className="text-sm font-medium">
+                  positive
+                </SelectItem>
+                <SelectItem value="negative" className="text-sm font-medium">
+                  negative
+                </SelectItem>
+              </SelectContent>
+            </Select>{" "}
+            growth,{" "}
+            <Select
               value={prompt.variationLevel}
-              onChange={handleChange}
-              className="align-middle inline-block mx-1 underline underline-offset-4 decoration-blue-400 bg-transparent text-blue-400 focus:outline-none transition-colors duration-150 w-auto min-w-[60px] max-w-[120px] appearance-none"
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, variationLevel: value }))
+              }
             >
-              <option value="low">low</option>
-              <option value="medium">medium</option>
-              <option value="high">high</option>
-            </select>
-            variation, and
-            <select
-              name="granularity"
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-800 text-white">
+                <SelectItem value="low" className="text-sm font-medium">
+                  low
+                </SelectItem>
+                <SelectItem value="medium" className="text-sm font-medium">
+                  medium
+                </SelectItem>
+                <SelectItem value="high" className="text-sm font-medium">
+                  high
+                </SelectItem>
+              </SelectContent>
+            </Select>{" "}
+            variation, and{" "}
+            <Select
               value={prompt.granularity}
-              onChange={handleChange}
-              className="align-middle inline-block mx-1 underline underline-offset-4 decoration-blue-400 bg-transparent text-blue-400 focus:outline-none transition-colors duration-150 w-auto min-w-[60px] max-w-[120px] appearance-none"
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, granularity: value }))
+              }
             >
-              <option value="daily">daily</option>
-              <option value="weekly">weekly</option>
-              <option value="monthly">monthly</option>
-            </select>
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-800 text-white">
+                <SelectItem value="daily" className="text-sm font-medium">
+                  daily
+                </SelectItem>
+                <SelectItem value="weekly" className="text-sm font-medium">
+                  weekly
+                </SelectItem>
+                <SelectItem value="monthly" className="text-sm font-medium">
+                  monthly
+                </SelectItem>
+              </SelectContent>
+            </Select>{" "}
             granularity.
           </p>
           <div className="flex justify-end w-full">
