@@ -45,11 +45,13 @@ export default function Home() {
   const rowCountOptions = [10, 50, 100, 250, 500, 1000, 5000];
   const businessTypeOptions = [
     "SaaS",
-    "E-commerce",
-    "Fintech",
+    "Ecommerce",
     "Healthcare",
+    "Fintech",
     "Education",
     "Retail",
+    "Manufacturing",
+    "Transportation",
   ];
   const timeRangeOptions = ["2023", "2024", "2025"];
 
@@ -72,6 +74,14 @@ export default function Home() {
     setLoading(true);
     setError("");
     setData(null);
+    // Show toast with hammer emoji
+    const toastId = toast.loading(
+      <div className="flex items-center gap-2">
+        <span className="animate-bounce">🛠️</span>
+        <span>Generating realistic dataset...</span>
+      </div>,
+      { duration: Infinity }
+    );
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -81,8 +91,12 @@ export default function Home() {
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
       setData(result.data);
+      toast.dismiss(toastId);
+      toast.success("Dataset generated successfully!");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
+      toast.dismiss(toastId);
+      toast.error("Failed to generate dataset");
     } finally {
       setLoading(false);
     }
@@ -145,59 +159,8 @@ export default function Home() {
               ))}
             </tbody>
           </table>
-          <div>
-            <div className="text-xs text-gray-400 mt-2">
-              Showing first {Math.max(table.rows.length, minRows)} rows
-            </div>
-            <div className="flex gap-6 mt-10">
-              <button
-                onClick={() => {
-                  const csv = toCSV(table.rows);
-                  const blob = new Blob([csv], { type: "text/csv" });
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = "dataset.csv";
-                  a.click();
-                }}
-                className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
-              >
-                Download CSV
-              </button>
-              <button
-                onClick={() => {
-                  const sql = toSQL(table.rows);
-                  const blob = new Blob([sql], { type: "text/plain" });
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = "dataset.sql";
-                  a.click();
-                }}
-                className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
-              >
-                Download SQL
-              </button>
-              {isMetabaseRunning ? (
-                <button
-                  onClick={stopMetabase}
-                  disabled={isInstallingMetabase}
-                  className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
-                >
-                  Stop Metabase
-                </button>
-              ) : (
-                <button
-                  onClick={startMetabase}
-                  disabled={isInstallingMetabase || !data || !data.length}
-                  className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
-                >
-                  {isInstallingMetabase
-                    ? "Installing..."
-                    : "Explore in Metabase"}
-                </button>
-              )}
-            </div>
+          <div className="text-xs text-gray-400 mt-2">
+            Showing first {Math.max(table.rows.length, minRows)} rows
           </div>
         </div>
       );
@@ -264,62 +227,6 @@ export default function Home() {
               </div>
             );
           })}
-          <div className="flex gap-6 mt-10">
-            <button
-              onClick={async () => {
-                const zip = new JSZip();
-                data.tables.forEach((table: any, index: number) => {
-                  const csv = toCSV(table.rows);
-                  const fileName = table.name
-                    ? `${table.name}.csv`
-                    : `table_${index + 1}.csv`;
-                  zip.file(fileName, csv);
-                });
-                const content = await zip.generateAsync({ type: "blob" });
-                const url = window.URL.createObjectURL(content);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "dataset.zip";
-                a.click();
-              }}
-              className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
-            >
-              Download CSV
-            </button>
-            <button
-              onClick={() => {
-                const sql = data.tables
-                  .map((table: any) => toSQL(table.rows))
-                  .join("\n\n");
-                const blob = new Blob([sql], { type: "text/plain" });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "dataset.sql";
-                a.click();
-              }}
-              className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
-            >
-              Download SQL
-            </button>
-            {isMetabaseRunning ? (
-              <button
-                onClick={stopMetabase}
-                disabled={isInstallingMetabase}
-                className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
-              >
-                Stop Metabase
-              </button>
-            ) : (
-              <button
-                onClick={startMetabase}
-                disabled={isInstallingMetabase || !data || !data.length}
-                className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
-              >
-                {isInstallingMetabase ? "Installing..." : "Explore in Metabase"}
-              </button>
-            )}
-          </div>
         </div>
       );
     }
@@ -690,20 +597,106 @@ export default function Home() {
           </p>
           <div className="flex justify-end w-full">
             <button
-              className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+              className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50 flex items-center gap-2"
               onClick={handlePreview}
               disabled={loading}
               type="button"
             >
-              {loading ? "Loading..." : "Preview Data"}
+              {loading ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 text-black"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Generating...
+                </>
+              ) : (
+                "Preview Data"
+              )}
             </button>
           </div>
         </main>
         <section className="flex-1 flex flex-col">
-          {data && data.tables && data.tables[0]?.rows && (
+          {loading && (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-white/80">Generating realistic dataset...</p>
+                <p className="text-white/60 text-sm mt-2">
+                  This may take a few moments
+                </p>
+              </div>
+            </div>
+          )}
+          {!loading && data && data.tables && data.tables[0]?.rows && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">Preview</h2>
+              <h2 className="text-xl font-bold text-blue-300">Preview</h2>
               {renderTable(data)}
+              <div className="flex gap-6 mt-6">
+                <button
+                  onClick={() => {
+                    const csv = toCSV(data.tables[0].rows);
+                    const blob = new Blob([csv], { type: "text/csv" });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "dataset.csv";
+                    a.click();
+                  }}
+                  className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+                >
+                  Download CSV
+                </button>
+                <button
+                  onClick={() => {
+                    const sql = toSQL(data.tables[0].rows);
+                    const blob = new Blob([sql], { type: "text/plain" });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "dataset.sql";
+                    a.click();
+                  }}
+                  className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+                >
+                  Download SQL
+                </button>
+                {isMetabaseRunning ? (
+                  <button
+                    onClick={stopMetabase}
+                    disabled={isInstallingMetabase}
+                    className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+                  >
+                    Stop Metabase
+                  </button>
+                ) : (
+                  <button
+                    onClick={startMetabase}
+                    disabled={isInstallingMetabase || !data || !data.length}
+                    className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+                  >
+                    {isInstallingMetabase
+                      ? "Installing..."
+                      : "Explore in Metabase"}
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </section>
