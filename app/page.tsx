@@ -534,7 +534,7 @@ export default function Home() {
           </h1>
         </header>
         <main className="mb-8">
-          <p className="text-lg text-white/90 leading-relaxed text-left max-w-2xl">
+          <p className="text-lg text-white/90 leading-relaxed text-left max-w-2xl mb-8">
             I want to generate a{" "}
             <Select
               value={String(prompt.rowCount)}
@@ -703,7 +703,7 @@ export default function Home() {
           {data && data.tables && data.tables[0]?.rows && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold">Preview</h2>
-              {renderTable(data.tables[0].rows)}
+              {renderTable(data)}
             </div>
           )}
         </section>
