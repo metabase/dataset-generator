@@ -248,7 +248,7 @@ export default function Home() {
           </h1>
         </header>
         <main className="mb-8">
-          <p className="text-lg text-white/90 leading-relaxed text-left max-w-2xl mb-8">
+          <div className="text-lg text-white/90 leading-relaxed text-left max-w-2xl mb-8">
             I want to generate a{" "}
             <Select
               value={String(prompt.rowCount)}
@@ -312,7 +312,7 @@ export default function Home() {
                 </SelectItem>
               </SelectContent>
             </Select>{" "}
-            schema, covering
+            schema, covering{" "}
             <MultiSelect
               options={timeRangeOptions}
               value={prompt.timeRange}
@@ -320,7 +320,7 @@ export default function Home() {
                 setPrompt((prev) => ({ ...prev, timeRange: vals }))
               }
               placeholder="Select year(s)"
-            />
+            />{" "}
             with{" "}
             <Select
               value={prompt.growthPattern}
@@ -388,7 +388,7 @@ export default function Home() {
               </SelectContent>
             </Select>{" "}
             granularity.
-          </p>
+          </div>
           <div className="flex justify-end w-full">
             <button
               className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50 flex items-center gap-2"
