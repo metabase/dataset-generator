@@ -1,5 +1,14 @@
 import React from "react";
 
+const FACT_TABLES = [
+  "events",
+  "order_items",
+  "transactions",
+  "visits",
+  "production_runs",
+  "trips",
+];
+
 export default function DataTable({ data }: { data: any }) {
   const minRows = 10;
   if (!data || !data.tables || data.tables.length === 0)
@@ -69,54 +78,59 @@ export default function DataTable({ data }: { data: any }) {
         const columns = Object.keys(table.rows[0]);
         const emptyRows =
           minRows - table.rows.length > 0 ? minRows - table.rows.length : 0;
+        const tableName = table.name || `Table ${tableIndex + 1}`;
+        const suffix = FACT_TABLES.includes(tableName) ? "_fact" : "_dim";
         return (
-          <div key={tableIndex} className="overflow-x-auto">
-            <h3 className="text-lg font-bold mb-2">
-              {table.name || `Table ${tableIndex + 1}`}
-            </h3>
-            <table className="min-w-full table-fixed border border-zinc-700 rounded-lg text-sm">
-              <thead>
-                <tr>
-                  {columns.map((col) => (
-                    <th
-                      key={col}
-                      className="px-3 py-2 bg-zinc-800 text-blue-300 font-semibold border-b border-zinc-700 text-left"
-                    >
-                      {col}
-                    </th>
+          <div key={tableIndex} className="flex flex-col mt-6">
+            <div className="text-xs text-gray-400 mb-1">
+              {tableName}
+              {suffix}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-fixed border border-zinc-700 rounded-lg text-sm">
+                <thead>
+                  <tr>
+                    {columns.map((col) => (
+                      <th
+                        key={col}
+                        className="px-3 py-2 bg-zinc-800 text-blue-300 font-semibold border-b border-zinc-700 text-left"
+                      >
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {table.rows.map((row: any, i: number) => (
+                    <tr key={i} className="even:bg-zinc-900 odd:bg-zinc-950">
+                      {columns.map((col) => (
+                        <td
+                          key={col}
+                          className="px-3 py-2 border-b border-zinc-800 text-white"
+                        >
+                          {row[col]}
+                        </td>
+                      ))}
+                    </tr>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {table.rows.map((row: any, i: number) => (
-                  <tr key={i} className="even:bg-zinc-900 odd:bg-zinc-950">
-                    {columns.map((col) => (
-                      <td
-                        key={col}
-                        className="px-3 py-2 border-b border-zinc-800 text-white"
-                      >
-                        {row[col]}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-                {Array.from({ length: emptyRows }).map((_, i) => (
-                  <tr
-                    key={`empty-${i}`}
-                    className="even:bg-zinc-900 odd:bg-zinc-950"
-                  >
-                    {columns.map((col) => (
-                      <td
-                        key={col}
-                        className="px-3 py-2 border-b border-zinc-800 text-white"
-                      >
-                        &nbsp;
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  {Array.from({ length: emptyRows }).map((_, i) => (
+                    <tr
+                      key={`empty-${i}`}
+                      className="even:bg-zinc-900 odd:bg-zinc-950"
+                    >
+                      {columns.map((col) => (
+                        <td
+                          key={col}
+                          className="px-3 py-2 border-b border-zinc-800 text-white"
+                        >
+                          &nbsp;
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="text-xs text-gray-400 mt-2">
               Showing first {Math.max(table.rows.length, minRows)} rows
             </div>

@@ -173,6 +173,68 @@ function SelectScrollDownButton({
   );
 }
 
+// Simple MultiSelect using a popover and checkboxes
+export function MultiSelect({
+  options,
+  value,
+  onChange,
+  placeholder = "Select...",
+}: {
+  options: string[];
+  value: string[];
+  onChange: (val: string[]) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+  return (
+    <div className="relative inline-block" ref={ref}>
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 px-2 py-1 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {value.length === 0 ? placeholder : value.join(", ")}
+        <ChevronDownIcon className="size-4 ml-1" />
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-2 w-40 bg-zinc-800 text-white rounded shadow-lg border border-zinc-700 p-2">
+          {options.map((opt) => (
+            <label
+              key={opt}
+              className="flex items-center gap-2 py-1 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={value.includes(opt)}
+                onChange={() => {
+                  if (value.includes(opt)) {
+                    onChange(value.filter((v) => v !== opt));
+                  } else {
+                    onChange([...value, opt]);
+                  }
+                }}
+                className="accent-blue-500"
+              />
+              <span>{opt}</span>
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export {
   Select,
   SelectContent,

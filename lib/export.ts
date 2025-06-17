@@ -1,4 +1,13 @@
-export function toCSV(rows: any[]) {
+const FACT_TABLES = [
+  "events",
+  "order_items",
+  "transactions",
+  "visits",
+  "production_runs",
+  "trips",
+];
+
+export function toCSV(rows: any[], tableName?: string) {
   if (!rows || !rows.length) return "";
   const columns = Object.keys(rows[0]);
   const header = columns.join(",");
@@ -7,10 +16,11 @@ export function toCSV(rows: any[]) {
       columns.map((col) => JSON.stringify(row[col] ?? "")).join(",")
     )
     .join("\n");
-  return header + "\n" + body;
+  // Optionally add table name as a comment for star schema
+  return (tableName ? `# ${tableName}\n` : "") + header + "\n" + body;
 }
 
-export function toSQL(rows: any[]) {
+export function toSQL(rows: any[], tableName = "dataset") {
   if (!rows || !rows.length) return "";
   const columns = Object.keys(rows[0]);
   // Guess types (very basic)
@@ -23,7 +33,7 @@ export function toSQL(rows: any[]) {
       typeMap[col] = "DATE";
     else typeMap[col] = "TEXT";
   }
-  const create = `CREATE TABLE dataset (\n  ${columns
+  const create = `CREATE TABLE ${tableName} (\n  ${columns
     .map((col) => `${col} ${typeMap[col]}`)
     .join(",\n  ")}\n);`;
   // Batch rows
@@ -44,7 +54,7 @@ export function toSQL(rows: any[]) {
       )
       .join(",\n  ");
     insertBatches.push(
-      `INSERT INTO dataset (${columns.join(", ")}) VALUES\n  ${values};`
+      `INSERT INTO ${tableName} (${columns.join(", ")}) VALUES\n  ${values};`
     );
   }
   return create + "\n" + insertBatches.join("\n\n");

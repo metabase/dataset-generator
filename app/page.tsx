@@ -10,6 +10,7 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
+  MultiSelect,
 } from "@/components/ui/select";
 import DataTable from "@/components/DataTable";
 import ExportButtons from "@/components/ExportButtons";
@@ -19,7 +20,7 @@ interface Prompt {
   rowCount: number;
   schemaType: string;
   businessType: string;
-  timeRange: string;
+  timeRange: string[];
   growthPattern: string;
   variationLevel: string;
   granularity: string;
@@ -30,7 +31,7 @@ export default function Home() {
     rowCount: 100,
     schemaType: "OBT",
     businessType: "SaaS",
-    timeRange: "2025",
+    timeRange: ["2025"],
     growthPattern: "steady",
     variationLevel: "medium",
     granularity: "daily",
@@ -66,8 +67,6 @@ export default function Home() {
       setPrompt((prev) => ({ ...prev, rowCount: Number(value) }));
     } else if (name === "schemaType") {
       setPrompt((prev) => ({ ...prev, schemaType: value }));
-    } else if (name === "timeRange") {
-      setPrompt((prev) => ({ ...prev, timeRange: value }));
     } else {
       setPrompt((prev) => ({ ...prev, [name]: value }));
     }
@@ -83,7 +82,7 @@ export default function Home() {
         <span>
           <span className="block">Generating a preview...</span>
           <span className="block text-xs text-gray-400">
-            Hold tight, this shouldn't take long
+            Hold tight, your data should be ready soon!
           </span>
         </span>
       </div>,
@@ -313,28 +312,15 @@ export default function Home() {
                 </SelectItem>
               </SelectContent>
             </Select>{" "}
-            schema, covering{" "}
-            <Select
+            schema, covering
+            <MultiSelect
+              options={timeRangeOptions}
               value={prompt.timeRange}
-              onValueChange={(value) =>
-                setPrompt((prev) => ({ ...prev, timeRange: value }))
+              onChange={(vals: string[]) =>
+                setPrompt((prev) => ({ ...prev, timeRange: vals }))
               }
-            >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-zinc-800 text-white">
-                {timeRangeOptions.map((opt) => (
-                  <SelectItem
-                    key={opt}
-                    value={opt}
-                    className="text-sm font-medium"
-                  >
-                    {opt}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>{" "}
+              placeholder="Select year(s)"
+            />
             with{" "}
             <Select
               value={prompt.growthPattern}
@@ -454,7 +440,6 @@ export default function Home() {
           )}
           {!loading && data && data.tables && data.tables[0]?.rows && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-blue-300">Preview</h2>
               <DataTable data={data} />
               <ExportButtons
                 data={data}
