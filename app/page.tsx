@@ -24,8 +24,8 @@ interface Prompt {
 
 export default function Home() {
   const [prompt, setPrompt] = useState<Prompt>({
-    rowCount: 10,
-    schemaType: "flat",
+    rowCount: 100,
+    schemaType: "OBT",
     businessType: "SaaS",
     timeRange: "2025",
     growthPattern: "steady",
@@ -42,7 +42,7 @@ export default function Home() {
   const metabaseWindowRef = useRef<Window | null>(null);
 
   // Dropdown options
-  const rowCountOptions = [10, 50, 100, 250, 500, 1000, 5000];
+  const rowCountOptions = [100, 250, 500, 1000, 5000];
   const businessTypeOptions = [
     "SaaS",
     "Ecommerce",
@@ -74,11 +74,15 @@ export default function Home() {
     setLoading(true);
     setError("");
     setData(null);
-    // Show toast with hammer emoji
     const toastId = toast.loading(
-      <div className="flex items-center gap-2">
-        <span className="animate-bounce">🛠️</span>
-        <span>Generating realistic dataset...</span>
+      <div className="flex items-center gap-2 min-w-[220px]">
+        <span>🛠️</span>
+        <span>
+          <span className="block">Generating realistic dataset...</span>
+          <span className="block text-xs text-gray-400">
+            This can take a few minutes.
+          </span>
+        </span>
       </div>,
       { duration: Infinity }
     );
@@ -86,7 +90,7 @@ export default function Home() {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(prompt),
+        body: JSON.stringify({ ...prompt, rowCount: 10 }), // Always preview 10 rows
       });
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
@@ -497,8 +501,8 @@ export default function Home() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-zinc-800 text-white">
-                <SelectItem value="flat" className="text-sm font-medium">
-                  One Table (Flat)
+                <SelectItem value="OBT" className="text-sm font-medium">
+                  One Big Table (OBT)
                 </SelectItem>
                 <SelectItem value="star" className="text-sm font-medium">
                   Multiple Tables (Star Schema)
@@ -541,11 +545,11 @@ export default function Home() {
                 <SelectItem value="steady" className="text-sm font-medium">
                   steady
                 </SelectItem>
-                <SelectItem value="positive" className="text-sm font-medium">
-                  positive
+                <SelectItem value="spiky" className="text-sm font-medium">
+                  spiky
                 </SelectItem>
-                <SelectItem value="negative" className="text-sm font-medium">
-                  negative
+                <SelectItem value="seasonal" className="text-sm font-medium">
+                  seasonal
                 </SelectItem>
               </SelectContent>
             </Select>{" "}
@@ -650,28 +654,82 @@ export default function Home() {
               {renderTable(data)}
               <div className="flex gap-6 mt-6">
                 <button
-                  onClick={() => {
-                    const csv = toCSV(data.tables[0].rows);
-                    const blob = new Blob([csv], { type: "text/csv" });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "dataset.csv";
-                    a.click();
+                  onClick={async () => {
+                    const csvToastId = toast.loading(
+                      <div className="flex flex-col items-start gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="animate-bounce">🛠️</span>
+                          <span>Generating full dataset (CSV)...</span>
+                        </div>
+                        <span className="text-xs text-gray-400">
+                          This can take a few minutes.
+                        </span>
+                      </div>,
+                      { duration: Infinity }
+                    );
+                    try {
+                      const response = await fetch("/api/generate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(prompt), // Use full rowCount
+                      });
+                      if (!response.ok)
+                        throw new Error("Failed to generate dataset");
+                      const result = await response.json();
+                      const csv = toCSV(result.data.tables[0].rows);
+                      const blob = new Blob([csv], { type: "text/csv" });
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = "dataset.csv";
+                      a.click();
+                      toast.dismiss(csvToastId);
+                      toast.success("CSV downloaded!");
+                    } catch (err) {
+                      toast.dismiss(csvToastId);
+                      toast.error("Failed to generate CSV");
+                    }
                   }}
                   className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
                 >
                   Download CSV
                 </button>
                 <button
-                  onClick={() => {
-                    const sql = toSQL(data.tables[0].rows);
-                    const blob = new Blob([sql], { type: "text/plain" });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "dataset.sql";
-                    a.click();
+                  onClick={async () => {
+                    const sqlToastId = toast.loading(
+                      <div className="flex flex-col items-start gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="animate-bounce">🛠️</span>
+                          <span>Generating full dataset (SQL)...</span>
+                        </div>
+                        <span className="text-xs text-gray-400">
+                          This can take a few minutes.
+                        </span>
+                      </div>,
+                      { duration: Infinity }
+                    );
+                    try {
+                      const response = await fetch("/api/generate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(prompt), // Use full rowCount
+                      });
+                      if (!response.ok)
+                        throw new Error("Failed to generate dataset");
+                      const result = await response.json();
+                      const sql = toSQL(result.data.tables[0].rows);
+                      const blob = new Blob([sql], { type: "text/plain" });
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = "dataset.sql";
+                      a.click();
+                      toast.dismiss(sqlToastId);
+                      toast.success("SQL downloaded!");
+                    } catch (err) {
+                      toast.dismiss(sqlToastId);
+                      toast.error("Failed to generate SQL");
+                    }
                   }}
                   className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
                 >
