@@ -9,19 +9,20 @@ const openai = new OpenAI({
 // Schema templates for different business types
 const SCHEMA_TEMPLATES = {
   SaaS: {
-    flat: [
+    OBT: [
       "user_id",
-      "signup_date",
+      "event_type",
+      "event_timestamp",
       "plan",
-      "mrr",
-      "churned",
-      "churn_date",
-      "last_login",
-      "feature_usage_count",
-      "support_tickets",
       "country",
       "device_type",
       "referral_source",
+      "feature_name",
+      "ticket_id",
+      "ticket_priority",
+      "ticket_category",
+      "previous_plan",
+      "new_plan",
     ],
     star: {
       users: [
@@ -32,62 +33,38 @@ const SCHEMA_TEMPLATES = {
         "device_type",
         "referral_source",
       ],
-      subscriptions: [
-        "subscription_id",
+      events: [
+        "event_id",
         "user_id",
-        "plan",
-        "start_date",
-        "end_date",
-        "mrr",
-        "status",
-      ],
-      usage: [
-        "usage_id",
-        "user_id",
-        "date",
-        "feature_usage_count",
-        "session_duration",
-      ],
-      support: [
+        "event_type",
+        "event_timestamp",
+        "feature_name",
         "ticket_id",
-        "user_id",
-        "created_at",
-        "resolved_at",
-        "priority",
-        "category",
+        "ticket_priority",
+        "ticket_category",
+        "previous_plan",
+        "new_plan",
       ],
     },
   },
   Ecommerce: {
-    flat: [
+    OBT: [
       "order_id",
       "customer_id",
-      "order_date",
+      "event_type",
+      "event_timestamp",
       "product_id",
       "quantity",
       "unit_price",
-      "total_amount",
       "payment_method",
       "shipping_address",
-      "order_status",
-      "customer_segment",
       "promo_code",
     ],
     star: {
-      orders: [
-        "order_id",
-        "customer_id",
-        "order_date",
-        "total_amount",
-        "payment_method",
-        "shipping_address",
-        "order_status",
-      ],
       customers: [
         "customer_id",
         "signup_date",
         "customer_segment",
-        "lifetime_value",
         "last_purchase_date",
       ],
       products: [
@@ -97,30 +74,35 @@ const SCHEMA_TEMPLATES = {
         "inventory_level",
         "supplier",
       ],
-      order_items: [
-        "order_item_id",
+      events: [
+        "event_id",
+        "customer_id",
+        "event_type",
+        "event_timestamp",
         "order_id",
         "product_id",
         "quantity",
         "unit_price",
+        "payment_method",
+        "shipping_address",
         "promo_code",
       ],
     },
   },
   Healthcare: {
-    flat: [
+    OBT: [
       "patient_id",
-      "visit_date",
+      "visit_id",
+      "event_type",
+      "event_timestamp",
       "doctor_id",
       "diagnosis_code",
       "procedure_code",
-      "medication_prescribed",
+      "medication_name",
+      "dosage",
       "visit_type",
       "insurance_provider",
-      "co_pay_amount",
-      "total_charge",
       "facility_id",
-      "discharge_status",
     ],
     star: {
       patients: [
@@ -131,53 +113,37 @@ const SCHEMA_TEMPLATES = {
         "primary_care_physician",
         "last_visit_date",
       ],
-      visits: [
-        "visit_id",
+      events: [
+        "event_id",
         "patient_id",
-        "visit_date",
+        "event_type",
+        "event_timestamp",
+        "visit_id",
         "doctor_id",
-        "facility_id",
-        "visit_type",
-        "discharge_status",
-      ],
-      diagnoses: [
-        "diagnosis_id",
-        "visit_id",
         "diagnosis_code",
-        "diagnosis_description",
-        "severity",
-      ],
-      procedures: [
-        "procedure_id",
-        "visit_id",
         "procedure_code",
-        "procedure_description",
-        "cost",
-      ],
-      medications: [
-        "medication_id",
-        "visit_id",
         "medication_name",
         "dosage",
-        "frequency",
-        "duration",
+        "visit_type",
+        "facility_id",
       ],
     },
   },
   Fintech: {
-    flat: [
+    OBT: [
       "transaction_id",
       "customer_id",
-      "transaction_date",
+      "event_type",
+      "event_timestamp",
       "transaction_type",
       "amount",
       "currency",
       "merchant_id",
       "merchant_category",
       "payment_method",
-      "status",
-      "fraud_score",
       "location",
+      "alert_id",
+      "alert_type",
     ],
     star: {
       customers: [
@@ -188,15 +154,6 @@ const SCHEMA_TEMPLATES = {
         "kyc_status",
         "last_activity_date",
       ],
-      transactions: [
-        "transaction_id",
-        "customer_id",
-        "transaction_date",
-        "amount",
-        "currency",
-        "status",
-        "fraud_score",
-      ],
       merchants: [
         "merchant_id",
         "merchant_name",
@@ -204,38 +161,34 @@ const SCHEMA_TEMPLATES = {
         "location",
         "risk_level",
       ],
-      accounts: [
-        "account_id",
+      events: [
+        "event_id",
         "customer_id",
-        "account_type",
-        "opening_date",
-        "balance",
-        "status",
-      ],
-      fraud_alerts: [
-        "alert_id",
+        "event_type",
+        "event_timestamp",
         "transaction_id",
-        "alert_date",
+        "transaction_type",
+        "amount",
+        "currency",
+        "merchant_id",
+        "payment_method",
+        "location",
+        "alert_id",
         "alert_type",
-        "severity",
-        "status",
       ],
     },
   },
   Education: {
-    flat: [
+    OBT: [
       "student_id",
+      "event_type",
+      "event_timestamp",
       "course_id",
-      "enrollment_date",
+      "assignment_id",
       "grade",
-      "attendance_percentage",
-      "assignment_completion",
-      "course_section",
+      "attendance_status",
       "instructor_id",
       "semester",
-      "credits",
-      "status",
-      "last_activity_date",
     ],
     star: {
       students: [
@@ -254,41 +207,29 @@ const SCHEMA_TEMPLATES = {
         "instructor_id",
         "semester",
       ],
-      enrollments: [
-        "enrollment_id",
+      events: [
+        "event_id",
         "student_id",
+        "event_type",
+        "event_timestamp",
         "course_id",
-        "enrollment_date",
-        "status",
+        "assignment_id",
         "grade",
-      ],
-      assignments: [
-        "assignment_id",
-        "course_id",
-        "due_date",
-        "max_points",
-        "submission_count",
-      ],
-      submissions: [
-        "submission_id",
-        "assignment_id",
-        "student_id",
-        "submission_date",
-        "points_earned",
-        "status",
+        "attendance_status",
+        "instructor_id",
+        "semester",
       ],
     },
   },
   Retail: {
-    flat: [
+    OBT: [
       "transaction_id",
       "store_id",
-      "transaction_date",
+      "event_type",
+      "event_timestamp",
       "product_id",
       "quantity",
       "unit_price",
-      "total_amount",
-      "payment_method",
       "customer_id",
       "employee_id",
       "promotion_id",
@@ -311,46 +252,35 @@ const SCHEMA_TEMPLATES = {
         "cost_price",
         "retail_price",
       ],
-      transactions: [
-        "transaction_id",
+      events: [
+        "event_id",
         "store_id",
-        "transaction_date",
-        "customer_id",
-        "employee_id",
-        "total_amount",
-        "payment_method",
-      ],
-      transaction_items: [
-        "item_id",
+        "event_type",
+        "event_timestamp",
         "transaction_id",
         "product_id",
         "quantity",
         "unit_price",
+        "customer_id",
+        "employee_id",
         "promotion_id",
-      ],
-      inventory: [
-        "inventory_id",
-        "store_id",
-        "product_id",
-        "quantity",
-        "last_restock_date",
-        "reorder_level",
+        "return_status",
       ],
     },
   },
   Manufacturing: {
-    flat: [
+    OBT: [
       "production_id",
+      "event_type",
+      "event_timestamp",
       "product_id",
-      "production_date",
       "quantity_produced",
       "defect_count",
       "machine_id",
       "operator_id",
-      "material_cost",
-      "labor_cost",
+      "material_id",
+      "material_used",
       "quality_score",
-      "production_line",
       "status",
     ],
     star: {
@@ -361,22 +291,6 @@ const SCHEMA_TEMPLATES = {
         "specifications",
         "target_quality_score",
       ],
-      production_runs: [
-        "run_id",
-        "product_id",
-        "start_date",
-        "end_date",
-        "target_quantity",
-        "status",
-      ],
-      production_metrics: [
-        "metric_id",
-        "run_id",
-        "timestamp",
-        "quantity_produced",
-        "defect_count",
-        "quality_score",
-      ],
       machines: [
         "machine_id",
         "machine_name",
@@ -384,28 +298,38 @@ const SCHEMA_TEMPLATES = {
         "installation_date",
         "maintenance_status",
       ],
-      materials: [
+      events: [
+        "event_id",
+        "product_id",
+        "event_type",
+        "event_timestamp",
+        "run_id",
+        "quantity_produced",
+        "defect_count",
+        "machine_id",
+        "operator_id",
         "material_id",
-        "material_name",
-        "supplier_id",
-        "unit_cost",
-        "current_stock",
+        "material_used",
+        "quality_score",
+        "status",
       ],
     },
   },
   Transportation: {
-    flat: [
+    OBT: [
       "trip_id",
       "vehicle_id",
       "driver_id",
-      "start_time",
-      "end_time",
+      "event_type",
+      "event_timestamp",
       "start_location",
       "end_location",
       "distance",
       "fuel_consumed",
       "passenger_count",
       "fare_amount",
+      "maintenance_id",
+      "maintenance_type",
       "status",
     ],
     star: {
@@ -425,28 +349,21 @@ const SCHEMA_TEMPLATES = {
         "status",
         "last_trip_date",
       ],
-      trips: [
+      events: [
+        "event_id",
         "trip_id",
         "vehicle_id",
         "driver_id",
-        "start_time",
-        "end_time",
-        "status",
-      ],
-      locations: [
-        "location_id",
-        "trip_id",
-        "timestamp",
-        "latitude",
-        "longitude",
-        "speed",
-      ],
-      maintenance: [
+        "event_type",
+        "event_timestamp",
+        "start_location",
+        "end_location",
+        "distance",
+        "fuel_consumed",
+        "passenger_count",
+        "fare_amount",
         "maintenance_id",
-        "vehicle_id",
-        "maintenance_date",
-        "type",
-        "cost",
+        "maintenance_type",
         "status",
       ],
     },
@@ -480,18 +397,18 @@ export async function POST(req: Request) {
 
     // Generate schema and data using OpenAI
     const completion = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
           content: `You are a data generation expert. Generate realistic ${businessType} data in JSON format with the following characteristics:
-- Schema: ${schemaType === "flat" ? "Single table" : "Multiple related tables"}
+- Schema: ${schemaType === "OBT" ? "Single table" : "Multiple related tables"}
 - Time range: ${timeRange}
 - Growth pattern: ${growthPattern}
 - Variation level: ${variationLevel}
 - Granularity: ${granularity}
 - Number of rows: ${rowCount}
-
+\nGenerate raw, unaggregated event-level data at the selected granularity. Do not include pre-calculated metrics or aggregations (e.g., MRR, totals, averages). Each row should represent a single event or transaction.\n
 The data should be realistic and include:
 - Raw, unaggregated data (no pre-calculated metrics or summaries)
 - Appropriate data types for each column
@@ -509,7 +426,7 @@ For example:
 
 Return the data as a JSON object with the following structure:
 ${
-  schemaType === "flat"
+  schemaType === "OBT"
     ? `{
   "rows": [
     { "column1": "value1", "column2": "value2", ... },
@@ -531,7 +448,7 @@ ${
         {
           role: "user",
           content: `Generate a ${businessType} dataset with ${rowCount} rows using this schema: ${
-            schemaType === "flat"
+            schemaType === "OBT"
               ? JSON.stringify(schemaTemplate)
               : JSON.stringify(schemaTemplate, null, 2)
           }
@@ -551,7 +468,7 @@ Return the data as a JSON object matching the structure described above.`,
     // Format the response based on schema type
     const response = {
       tables:
-        schemaType === "flat"
+        schemaType === "OBT"
           ? [
               {
                 name: `${businessType.toLowerCase()}_data`,
