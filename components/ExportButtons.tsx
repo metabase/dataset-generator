@@ -2,15 +2,6 @@ import React from "react";
 import toast, { Toaster } from "react-hot-toast";
 import JSZip from "jszip";
 
-const FACT_TABLES = [
-  "events",
-  "order_items",
-  "transactions",
-  "visits",
-  "production_runs",
-  "trips",
-];
-
 export default function ExportButtons({
   data,
   prompt,
@@ -22,8 +13,6 @@ export default function ExportButtons({
   stopMetabase,
 }: any) {
   const handleExport = async (type: "csv" | "sql") => {
-    console.log("Export prompt:", prompt);
-    console.log("Export rowCount:", prompt.rowCount);
     const toastId = toast.loading(
       <span className="text-sm">
         {type === "csv"

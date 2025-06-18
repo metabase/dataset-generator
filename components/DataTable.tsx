@@ -1,14 +1,5 @@
 import React from "react";
 
-const FACT_TABLES = [
-  "events",
-  "order_items",
-  "transactions",
-  "visits",
-  "production_runs",
-  "trips",
-];
-
 export default function DataTable({ data }: { data: any }) {
   const minRows = 10;
   if (!data || !data.tables || data.tables.length === 0)

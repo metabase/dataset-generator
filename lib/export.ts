@@ -1,12 +1,3 @@
-const FACT_TABLES = [
-  "events",
-  "order_items",
-  "transactions",
-  "visits",
-  "production_runs",
-  "trips",
-];
-
 export function toCSV(rows: any[], tableName?: string) {
   if (!rows || !rows.length) return "";
   const columns = Object.keys(rows[0]);
