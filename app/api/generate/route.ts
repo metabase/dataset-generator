@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { insertGeneratedData } from "@/app/lib/db";
+import {
+  insertGeneratedData,
+  insertTablesToAnalyticsSchema,
+} from "@/app/lib/db";
 import { OpenAI } from "openai";
 import {
   generateDatasetPrompt,
@@ -111,6 +114,15 @@ export async function POST(req: Request) {
     // Log the parsed generated data
     if (process.env.NODE_ENV !== "production") {
       console.log("[API] Parsed generatedData:", generatedData);
+    }
+
+    // Insert into analytics schema if not a preview
+    if (!isPreview) {
+      try {
+        await insertTablesToAnalyticsSchema(generatedData);
+      } catch (err) {
+        console.error("[API] Failed to insert into analytics schema:", err);
+      }
     }
 
     // Format the response based on schema type
