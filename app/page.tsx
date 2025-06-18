@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import React from "react";
 import {
   Select,
@@ -25,6 +25,7 @@ interface Prompt {
   variationLevel: string;
   granularity: string;
   context: string;
+  isPreview?: boolean;
 }
 
 export default function Home() {
@@ -62,6 +63,19 @@ export default function Home() {
   const timeRangeOptions = ["2023", "2024", "2025"];
   const growthPatternOptions = ["steady", "spike", "decline"];
 
+  useEffect(() => {
+    setData(null);
+  }, [
+    prompt.schemaType,
+    prompt.businessType,
+    prompt.rowCount,
+    prompt.timeRange.join(","),
+    prompt.growthPattern,
+    prompt.variationLevel,
+    prompt.granularity,
+    prompt.context,
+  ]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -83,15 +97,17 @@ export default function Home() {
       <span className="text-sm">Hold tight while we generate a preview!</span>,
       { duration: Infinity }
     );
+    const previewPrompt = {
+      ...prompt,
+      rowCount: 10,
+      context: prompt.context,
+      isPreview: true,
+    };
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...prompt,
-          rowCount: 10,
-          context: prompt.context,
-        }), // Always preview 10 rows
+        body: JSON.stringify(previewPrompt), // Always preview 10 rows
       });
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
@@ -479,7 +495,7 @@ export default function Home() {
               <DataTable data={data} />
               <ExportButtons
                 data={data}
-                prompt={{ ...prompt, context: prompt.context }}
+                prompt={prompt}
                 toCSV={toCSV}
                 toSQL={toSQL}
                 isMetabaseRunning={isMetabaseRunning}

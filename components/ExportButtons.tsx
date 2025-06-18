@@ -22,6 +22,8 @@ export default function ExportButtons({
   stopMetabase,
 }: any) {
   const handleExport = async (type: "csv" | "sql") => {
+    console.log("Export prompt:", prompt);
+    console.log("Export rowCount:", prompt.rowCount);
     const toastId = toast.loading(
       <span className="text-sm">
         {type === "csv"
