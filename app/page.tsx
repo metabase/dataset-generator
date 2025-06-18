@@ -2,8 +2,6 @@
 
 import { useState, useRef } from "react";
 import React from "react";
-import { toast } from "sonner";
-import JSZip from "jszip";
 import {
   Select,
   SelectTrigger,
@@ -15,6 +13,8 @@ import {
 import DataTable from "@/components/DataTable";
 import ExportButtons from "@/components/ExportButtons";
 import { toCSV, toSQL, downloadFile } from "@/lib/export";
+import { Toaster } from "@/components/ExportButtons";
+import toast from "react-hot-toast";
 
 interface Prompt {
   rowCount: number;
@@ -24,6 +24,7 @@ interface Prompt {
   growthPattern: string;
   variationLevel: string;
   granularity: string;
+  context: string;
 }
 
 export default function Home() {
@@ -35,6 +36,7 @@ export default function Home() {
     growthPattern: "steady",
     variationLevel: "medium",
     granularity: "daily",
+    context: "",
   });
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -43,7 +45,7 @@ export default function Home() {
   const [metabaseMessage, setMetabaseMessage] = useState("");
   const [metabaseProgress, setMetabaseProgress] = useState(0);
   const [isMetabaseRunning, setIsMetabaseRunning] = useState(false);
-  const metabaseWindowRef = useRef<Window | null>(null);
+  const [showContext, setShowContext] = useState(false);
 
   // Dropdown options
   const rowCountOptions = [100, 250, 500, 1000, 5000];
@@ -58,6 +60,7 @@ export default function Home() {
     "Transportation",
   ];
   const timeRangeOptions = ["2023", "2024", "2025"];
+  const growthPatternOptions = ["steady", "spike", "decline"];
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -77,28 +80,26 @@ export default function Home() {
     setError("");
     setData(null);
     const toastId = toast.loading(
-      <div className="flex items-center gap-2 min-w-[220px]">
-        <span>🛠️</span>
-        <span>
-          <span className="block">Generating a preview...</span>
-          <span className="block text-xs text-gray-400">
-            Hold tight, your data should be ready soon!
-          </span>
-        </span>
-      </div>,
+      <span className="text-sm">Hold tight while we generate a preview!</span>,
       { duration: Infinity }
     );
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...prompt, rowCount: 10 }), // Always preview 10 rows
+        body: JSON.stringify({
+          ...prompt,
+          rowCount: 10,
+          context: prompt.context,
+        }), // Always preview 10 rows
       });
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
       setData(result.data);
       toast.dismiss(toastId);
-      toast.success("Dataset generated successfully!");
+      toast.success(
+        <span className="text-sm">Preview generated successfully!</span>
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       toast.dismiss(toastId);
@@ -112,14 +113,10 @@ export default function Home() {
   async function startMetabase() {
     setIsInstallingMetabase(true);
     setMetabaseProgress(0);
-    // Open window immediately to avoid popup blocker
-    if (!metabaseWindowRef.current || metabaseWindowRef.current.closed) {
-      metabaseWindowRef.current = window.open("about:blank", "_blank");
-    }
-    // Show sticky gray toast for installing
+    // Do NOT open a new tab immediately
     const toastId = toast.loading(
-      "Metabase is installing and will open in a new window. This can take 2-3 minutes.",
-      { duration: Infinity, icon: null, closeButton: true }
+      "⏳ Metabase is starting. We'll let you know when it's ready!",
+      { duration: Infinity, icon: null }
     );
     try {
       const response = await fetch("/api/metabase/start", {
@@ -133,9 +130,7 @@ export default function Home() {
         toast.error(err.error || "Failed to start Metabase", {
           duration: Infinity,
           icon: null,
-          closeButton: true,
         });
-        if (metabaseWindowRef.current) metabaseWindowRef.current.close();
         return;
       }
       const data = await response.json();
@@ -152,10 +147,21 @@ export default function Home() {
             setMetabaseProgress(100);
             setIsMetabaseRunning(true);
             toast.dismiss(toastId);
-            if (metabaseWindowRef.current) {
-              metabaseWindowRef.current.location.href = "http://localhost:3001";
-              metabaseWindowRef.current.focus();
-            }
+            toast(
+              <span className="text-sm flex items-center gap-2">
+                Metabase is ready!{" "}
+                <a
+                  href="http://localhost:3001"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs font-semibold"
+                  style={{ textDecoration: "none" }}
+                >
+                  Open Metabase
+                </a>
+              </span>,
+              { duration: 15000, icon: null }
+            );
             return;
           }
           attempts++;
@@ -172,9 +178,7 @@ export default function Home() {
           toast.error("Failed to start Metabase. Please try again.", {
             duration: Infinity,
             icon: null,
-            closeButton: true,
           });
-          if (metabaseWindowRef.current) metabaseWindowRef.current.close();
           console.error("Error checking Metabase status:", error);
         }
       };
@@ -187,9 +191,7 @@ export default function Home() {
       toast.error("Failed to start Metabase. Please try again.", {
         duration: Infinity,
         icon: null,
-        closeButton: true,
       });
-      if (metabaseWindowRef.current) metabaseWindowRef.current.close();
       console.error("Error starting Metabase:", error);
     }
   }
@@ -199,7 +201,6 @@ export default function Home() {
     const toastId = toast.loading("Stopping Metabase and cleaning up...", {
       duration: Infinity,
       icon: null,
-      closeButton: true,
     });
     try {
       const response = await fetch("/api/metabase/stop", { method: "POST" });
@@ -209,7 +210,6 @@ export default function Home() {
         toast.error(err.error || "Failed to stop Metabase", {
           duration: Infinity,
           icon: null,
-          closeButton: true,
         });
         return;
       }
@@ -217,18 +217,12 @@ export default function Home() {
       toast.dismiss(toastId);
       toast.success("Metabase stopped and cleaned up.", {
         icon: null,
-        closeButton: true,
       });
-      if (metabaseWindowRef.current) {
-        metabaseWindowRef.current.close();
-        metabaseWindowRef.current = null;
-      }
     } catch (error) {
       toast.dismiss(toastId);
       toast.error("Failed to stop Metabase. Please try again.", {
         duration: Infinity,
         icon: null,
-        closeButton: true,
       });
       console.error("Error stopping Metabase:", error);
     }
@@ -236,6 +230,20 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-black flex items-start justify-center">
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: "#222",
+            color: "#fff",
+            fontSize: "1rem",
+            boxShadow: "0 2px 8px #0008",
+            border: "1px solid #333",
+          },
+          success: { icon: "✅" },
+          error: { icon: "❌" },
+        }}
+      />
       <div
         className="bg-black rounded-lg shadow-2xl px-4 sm:px-8 py-8 sm:py-12 w-full max-w-4xl flex flex-col"
         style={{ minHeight: "60vh" }}
@@ -314,6 +322,7 @@ export default function Home() {
             </Select>{" "}
             schema, covering{" "}
             <MultiSelect
+              className="inline-block align-baseline !px-1 !py-0"
               options={timeRangeOptions}
               value={prompt.timeRange}
               onChange={(vals: string[]) =>
@@ -332,15 +341,15 @@ export default function Home() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-zinc-800 text-white">
-                <SelectItem value="steady" className="text-sm font-medium">
-                  steady
-                </SelectItem>
-                <SelectItem value="spiky" className="text-sm font-medium">
-                  spiky
-                </SelectItem>
-                <SelectItem value="seasonal" className="text-sm font-medium">
-                  seasonal
-                </SelectItem>
+                {growthPatternOptions.map((opt) => (
+                  <SelectItem
+                    key={opt}
+                    value={opt}
+                    className="text-sm font-medium"
+                  >
+                    {opt}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>{" "}
             growth,{" "}
@@ -387,7 +396,34 @@ export default function Home() {
                 </SelectItem>
               </SelectContent>
             </Select>{" "}
-            granularity.
+            granularity.{" "}
+            <button
+              type="button"
+              aria-label="Add advanced context"
+              className={`ml-2 text-lg transition-colors ${
+                prompt.context ? "text-blue-400" : "text-zinc-400"
+              } hover:text-blue-400 focus:outline-none align-middle`}
+              onClick={() => setShowContext((v) => !v)}
+              title="Add additional context"
+              style={{ verticalAlign: "middle" }}
+            >
+              <span role="img" aria-label="Advanced">
+                ⚙️
+              </span>
+            </button>
+            {showContext && (
+              <div className="mt-4">
+                <textarea
+                  className="w-full rounded-tl-xl rounded-tr-xl rounded-bl-xl rounded-br-xl bg-zinc-800 text-white px-4 py-2 text-sm border border-zinc-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none resize-vertical placeholder:text-zinc-500"
+                  style={{ height: "100px" }}
+                  placeholder="Add any additional context..."
+                  value={prompt.context}
+                  onChange={(e) =>
+                    setPrompt((prev) => ({ ...prev, context: e.target.value }))
+                  }
+                />
+              </div>
+            )}
           </div>
           <div className="flex justify-end w-full">
             <button
@@ -443,7 +479,7 @@ export default function Home() {
               <DataTable data={data} />
               <ExportButtons
                 data={data}
-                prompt={prompt}
+                prompt={{ ...prompt, context: prompt.context }}
                 toCSV={toCSV}
                 toSQL={toSQL}
                 isMetabaseRunning={isMetabaseRunning}

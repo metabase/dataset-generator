@@ -1,5 +1,6 @@
 import React from "react";
-import { toast } from "sonner";
+import toast, { Toaster } from "react-hot-toast";
+import JSZip from "jszip";
 
 const FACT_TABLES = [
   "events",
@@ -22,17 +23,11 @@ export default function ExportButtons({
 }: any) {
   const handleExport = async (type: "csv" | "sql") => {
     const toastId = toast.loading(
-      <div className="flex items-center gap-2 min-w-[220px]">
-        <span>🛠️</span>
-        <span>
-          <span className="block">
-            Generating full dataset ({type.toUpperCase()})...
-          </span>
-          <span className="block text-xs text-gray-400">
-            This can take a few minutes.
-          </span>
-        </span>
-      </div>,
+      <span className="text-sm">
+        {type === "csv"
+          ? "Generating CSV file... This can take a few minutes"
+          : "Generating SQL file... This can take a few minutes"}
+      </span>,
       { duration: Infinity }
     );
     try {
@@ -43,14 +38,36 @@ export default function ExportButtons({
       });
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
+      if (prompt.schemaType === "star" && type === "csv") {
+        // Star schema: zip all tables as separate CSVs
+        const zip = new JSZip();
+        result.data.tables.forEach((table: any) => {
+          const tableName = table.name || "table";
+          let suffix = "";
+          if (table.type === "fact") suffix = "_fact";
+          else if (table.type === "dim") suffix = "_dim";
+          const csv = toCSV(table.rows, tableName + suffix);
+          zip.file(`${tableName}${suffix}.csv`, csv);
+        });
+        const blob = await zip.generateAsync({ type: "blob" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `dataset.zip`;
+        a.click();
+        toast.dismiss(toastId);
+        toast.success(<span className="text-sm">ZIP downloaded!</span>);
+        return;
+      }
       let content = "";
       if (prompt.schemaType === "star") {
-        // Star schema: export all tables with _fact/_dim suffix
+        // Star schema: export all tables with _fact/_dim suffix (SQL only)
         content = result.data.tables
           .map((table: any) => {
             const tableName = table.name || "table";
-            const suffix = FACT_TABLES.includes(tableName) ? "_fact" : "_dim";
-            if (type === "csv") return toCSV(table.rows, tableName + suffix);
+            let suffix = "";
+            if (table.type === "fact") suffix = "_fact";
+            else if (table.type === "dim") suffix = "_dim";
             return toSQL(table.rows, tableName + suffix);
           })
           .join("\n\n");
@@ -76,7 +93,9 @@ export default function ExportButtons({
       a.download = `dataset.${type}`;
       a.click();
       toast.dismiss(toastId);
-      toast.success(`${type.toUpperCase()} downloaded!`);
+      toast.success(
+        <span className="text-sm">{type.toUpperCase()} downloaded!</span>
+      );
     } catch (err) {
       toast.dismiss(toastId);
       toast.error(`Failed to generate ${type.toUpperCase()}`);
@@ -122,3 +141,5 @@ export default function ExportButtons({
     </div>
   );
 }
+
+export { Toaster };

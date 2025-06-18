@@ -25,26 +25,32 @@ const SCHEMA_TEMPLATES = {
       "new_plan",
     ],
     star: {
-      users: [
-        "user_id",
-        "signup_date",
-        "plan",
-        "country",
-        "device_type",
-        "referral_source",
-      ],
-      events: [
-        "event_id",
-        "user_id",
-        "event_type",
-        "event_timestamp",
-        "feature_name",
-        "ticket_id",
-        "ticket_priority",
-        "ticket_category",
-        "previous_plan",
-        "new_plan",
-      ],
+      users: {
+        type: "dim",
+        fields: [
+          "user_id",
+          "signup_date",
+          "plan",
+          "country",
+          "device_type",
+          "referral_source",
+        ],
+      },
+      events: {
+        type: "fact",
+        fields: [
+          "event_id",
+          "user_id",
+          "event_type",
+          "event_timestamp",
+          "feature_name",
+          "ticket_id",
+          "ticket_priority",
+          "ticket_category",
+          "previous_plan",
+          "new_plan",
+        ],
+      },
     },
   },
   Ecommerce: {
@@ -61,32 +67,41 @@ const SCHEMA_TEMPLATES = {
       "promo_code",
     ],
     star: {
-      customers: [
-        "customer_id",
-        "signup_date",
-        "customer_segment",
-        "last_purchase_date",
-      ],
-      products: [
-        "product_id",
-        "category",
-        "price",
-        "inventory_level",
-        "supplier",
-      ],
-      events: [
-        "event_id",
-        "customer_id",
-        "event_type",
-        "event_timestamp",
-        "order_id",
-        "product_id",
-        "quantity",
-        "unit_price",
-        "payment_method",
-        "shipping_address",
-        "promo_code",
-      ],
+      customers: {
+        type: "dim",
+        fields: [
+          "customer_id",
+          "signup_date",
+          "customer_segment",
+          "last_purchase_date",
+        ],
+      },
+      products: {
+        type: "dim",
+        fields: [
+          "product_id",
+          "category",
+          "price",
+          "inventory_level",
+          "supplier",
+        ],
+      },
+      events: {
+        type: "fact",
+        fields: [
+          "event_id",
+          "customer_id",
+          "event_type",
+          "event_timestamp",
+          "order_id",
+          "product_id",
+          "quantity",
+          "unit_price",
+          "payment_method",
+          "shipping_address",
+          "promo_code",
+        ],
+      },
     },
   },
   Healthcare: {
@@ -105,28 +120,34 @@ const SCHEMA_TEMPLATES = {
       "facility_id",
     ],
     star: {
-      patients: [
-        "patient_id",
-        "date_of_birth",
-        "gender",
-        "insurance_provider",
-        "primary_care_physician",
-        "last_visit_date",
-      ],
-      events: [
-        "event_id",
-        "patient_id",
-        "event_type",
-        "event_timestamp",
-        "visit_id",
-        "doctor_id",
-        "diagnosis_code",
-        "procedure_code",
-        "medication_name",
-        "dosage",
-        "visit_type",
-        "facility_id",
-      ],
+      patients: {
+        type: "dim",
+        fields: [
+          "patient_id",
+          "date_of_birth",
+          "gender",
+          "insurance_provider",
+          "primary_care_physician",
+          "last_visit_date",
+        ],
+      },
+      events: {
+        type: "fact",
+        fields: [
+          "event_id",
+          "patient_id",
+          "event_type",
+          "event_timestamp",
+          "visit_id",
+          "doctor_id",
+          "diagnosis_code",
+          "procedure_code",
+          "medication_name",
+          "dosage",
+          "visit_type",
+          "facility_id",
+        ],
+      },
     },
   },
   Fintech: {
@@ -146,36 +167,45 @@ const SCHEMA_TEMPLATES = {
       "alert_type",
     ],
     star: {
-      customers: [
-        "customer_id",
-        "signup_date",
-        "account_type",
-        "risk_level",
-        "kyc_status",
-        "last_activity_date",
-      ],
-      merchants: [
-        "merchant_id",
-        "merchant_name",
-        "merchant_category",
-        "location",
-        "risk_level",
-      ],
-      events: [
-        "event_id",
-        "customer_id",
-        "event_type",
-        "event_timestamp",
-        "transaction_id",
-        "transaction_type",
-        "amount",
-        "currency",
-        "merchant_id",
-        "payment_method",
-        "location",
-        "alert_id",
-        "alert_type",
-      ],
+      customers: {
+        type: "dim",
+        fields: [
+          "customer_id",
+          "signup_date",
+          "account_type",
+          "risk_level",
+          "kyc_status",
+          "last_activity_date",
+        ],
+      },
+      merchants: {
+        type: "dim",
+        fields: [
+          "merchant_id",
+          "merchant_name",
+          "merchant_category",
+          "location",
+          "risk_level",
+        ],
+      },
+      events: {
+        type: "fact",
+        fields: [
+          "event_id",
+          "customer_id",
+          "event_type",
+          "event_timestamp",
+          "transaction_id",
+          "transaction_type",
+          "amount",
+          "currency",
+          "merchant_id",
+          "payment_method",
+          "location",
+          "alert_id",
+          "alert_type",
+        ],
+      },
     },
   },
   Education: {
@@ -191,34 +221,43 @@ const SCHEMA_TEMPLATES = {
       "semester",
     ],
     star: {
-      students: [
-        "student_id",
-        "enrollment_date",
-        "major",
-        "year_level",
-        "gpa",
-        "status",
-      ],
-      courses: [
-        "course_id",
-        "course_name",
-        "department",
-        "credits",
-        "instructor_id",
-        "semester",
-      ],
-      events: [
-        "event_id",
-        "student_id",
-        "event_type",
-        "event_timestamp",
-        "course_id",
-        "assignment_id",
-        "grade",
-        "attendance_status",
-        "instructor_id",
-        "semester",
-      ],
+      students: {
+        type: "dim",
+        fields: [
+          "student_id",
+          "enrollment_date",
+          "major",
+          "year_level",
+          "gpa",
+          "status",
+        ],
+      },
+      courses: {
+        type: "dim",
+        fields: [
+          "course_id",
+          "course_name",
+          "department",
+          "credits",
+          "instructor_id",
+          "semester",
+        ],
+      },
+      events: {
+        type: "fact",
+        fields: [
+          "event_id",
+          "student_id",
+          "event_type",
+          "event_timestamp",
+          "course_id",
+          "assignment_id",
+          "grade",
+          "attendance_status",
+          "instructor_id",
+          "semester",
+        ],
+      },
     },
   },
   Retail: {
@@ -236,36 +275,45 @@ const SCHEMA_TEMPLATES = {
       "return_status",
     ],
     star: {
-      stores: [
-        "store_id",
-        "store_name",
-        "location",
-        "opening_date",
-        "store_type",
-        "manager_id",
-      ],
-      products: [
-        "product_id",
-        "product_name",
-        "category",
-        "supplier_id",
-        "cost_price",
-        "retail_price",
-      ],
-      events: [
-        "event_id",
-        "store_id",
-        "event_type",
-        "event_timestamp",
-        "transaction_id",
-        "product_id",
-        "quantity",
-        "unit_price",
-        "customer_id",
-        "employee_id",
-        "promotion_id",
-        "return_status",
-      ],
+      stores: {
+        type: "dim",
+        fields: [
+          "store_id",
+          "store_name",
+          "location",
+          "opening_date",
+          "store_type",
+          "manager_id",
+        ],
+      },
+      products: {
+        type: "dim",
+        fields: [
+          "product_id",
+          "product_name",
+          "category",
+          "supplier_id",
+          "cost_price",
+          "retail_price",
+        ],
+      },
+      events: {
+        type: "fact",
+        fields: [
+          "event_id",
+          "store_id",
+          "event_type",
+          "event_timestamp",
+          "transaction_id",
+          "product_id",
+          "quantity",
+          "unit_price",
+          "customer_id",
+          "employee_id",
+          "promotion_id",
+          "return_status",
+        ],
+      },
     },
   },
   Manufacturing: {
@@ -284,35 +332,44 @@ const SCHEMA_TEMPLATES = {
       "status",
     ],
     star: {
-      products: [
-        "product_id",
-        "product_name",
-        "category",
-        "specifications",
-        "target_quality_score",
-      ],
-      machines: [
-        "machine_id",
-        "machine_name",
-        "type",
-        "installation_date",
-        "maintenance_status",
-      ],
-      events: [
-        "event_id",
-        "product_id",
-        "event_type",
-        "event_timestamp",
-        "run_id",
-        "quantity_produced",
-        "defect_count",
-        "machine_id",
-        "operator_id",
-        "material_id",
-        "material_used",
-        "quality_score",
-        "status",
-      ],
+      products: {
+        type: "dim",
+        fields: [
+          "product_id",
+          "product_name",
+          "category",
+          "specifications",
+          "target_quality_score",
+        ],
+      },
+      machines: {
+        type: "dim",
+        fields: [
+          "machine_id",
+          "machine_name",
+          "type",
+          "installation_date",
+          "maintenance_status",
+        ],
+      },
+      events: {
+        type: "fact",
+        fields: [
+          "event_id",
+          "product_id",
+          "event_type",
+          "event_timestamp",
+          "run_id",
+          "quantity_produced",
+          "defect_count",
+          "machine_id",
+          "operator_id",
+          "material_id",
+          "material_used",
+          "quality_score",
+          "status",
+        ],
+      },
     },
   },
   Transportation: {
@@ -333,39 +390,48 @@ const SCHEMA_TEMPLATES = {
       "status",
     ],
     star: {
-      vehicles: [
-        "vehicle_id",
-        "vehicle_type",
-        "registration_date",
-        "capacity",
-        "status",
-        "last_maintenance_date",
-      ],
-      drivers: [
-        "driver_id",
-        "hire_date",
-        "license_type",
-        "rating",
-        "status",
-        "last_trip_date",
-      ],
-      events: [
-        "event_id",
-        "trip_id",
-        "vehicle_id",
-        "driver_id",
-        "event_type",
-        "event_timestamp",
-        "start_location",
-        "end_location",
-        "distance",
-        "fuel_consumed",
-        "passenger_count",
-        "fare_amount",
-        "maintenance_id",
-        "maintenance_type",
-        "status",
-      ],
+      vehicles: {
+        type: "dim",
+        fields: [
+          "vehicle_id",
+          "vehicle_type",
+          "registration_date",
+          "capacity",
+          "status",
+          "last_maintenance_date",
+        ],
+      },
+      drivers: {
+        type: "dim",
+        fields: [
+          "driver_id",
+          "hire_date",
+          "license_type",
+          "rating",
+          "status",
+          "last_trip_date",
+        ],
+      },
+      events: {
+        type: "fact",
+        fields: [
+          "event_id",
+          "trip_id",
+          "vehicle_id",
+          "driver_id",
+          "event_type",
+          "event_timestamp",
+          "start_location",
+          "end_location",
+          "distance",
+          "fuel_consumed",
+          "passenger_count",
+          "fare_amount",
+          "maintenance_id",
+          "maintenance_type",
+          "status",
+        ],
+      },
     },
   },
 };
@@ -401,39 +467,48 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "system",
-          content: `You are a data generation expert. Generate realistic ${businessType} data in JSON format with the following characteristics:
-- Schema: ${schemaType === "OBT" ? "Single table" : "Multiple related tables"}
+          content: `You are a data generation expert. Generate production-quality, realistic, plausible, and industry-specific ${businessType} data in JSON format with the following characteristics:
+- Schema: ${
+            schemaType === "OBT"
+              ? "Single table"
+              : "Multiple related tables (star schema with fact/dim tables)"
+          }
 - Time range: ${timeRange}
 - Growth pattern: ${growthPattern}
 - Variation level: ${variationLevel}
 - Granularity: ${granularity}
 - Number of rows: ${rowCount}
-\nGenerate raw, unaggregated event-level data at the selected granularity. Do not include pre-calculated metrics or aggregations (e.g., MRR, totals, averages). Each row should represent a single event or transaction.\n
-The data should be realistic and include:
-- Raw, unaggregated data (no pre-calculated metrics or summaries)
-- Appropriate data types for each column
-- Realistic value ranges and distributions
-- Temporal patterns matching the growth pattern
-- Natural variations in the data
-- Realistic relationships between tables (if star schema)
-- No synthetic-looking patterns or obvious fake data
-- No pre-calculated aggregations or derived metrics
-- Each row should represent a single event/transaction/record
 
-For example:
-- For SaaS: Raw usage events, individual subscription changes, actual support tickets
-- For E-commerce: Individual order items, raw customer interactions, actual inventory changes
+Requirements:
+- Generate raw, unaggregated, event-level data at the selected granularity. Do NOT include pre-calculated metrics or aggregations (e.g., MRR, totals, averages). Each row should represent a single event, transaction, or record.
+- Use appropriate data types for each column (e.g., timestamps, numbers, enums, strings).
+- Use realistic value ranges, distributions, and relationships between columns and tables.
+- Respect the fact/dim metadata in the schema (for star schemas, tables with type 'fact' should be suffixed _fact, and 'dim' as _dim).
+- Avoid synthetic-looking patterns, obvious fake data, or uniform/random values. Use plausible, analytics-ready data.
+- No pre-calculated aggregations or derived metrics. No summaries.
+- Each row should be plausible for a real analytics or dashboarding use case.
+- For star schemas, ensure realistic foreign key relationships between fact and dimension tables.
+
+Examples by industry:
+- SaaS: Usage events (logins, feature use), subscription changes, support tickets, all as raw events. No MRR, no churn rates, no aggregates.
+- Ecommerce: Order items, customer actions, inventory changes, all as raw events. No total sales, no summaries.
+- Healthcare: Patient visits, procedures, medication events, all as raw records. No patient counts, no averages.
+- Fintech: Transactions, alerts, merchant/customer events, all as raw records. No balances, no summaries.
+- Education: Student assignments, attendance, grades, all as raw events. No GPA averages, no summaries.
+- Retail: Transactions, returns, inventory changes, all as raw events. No total sales, no summaries.
+- Manufacturing: Production runs, defects, machine events, all as raw records. No totals, no summaries.
+- Transportation: Trips, maintenance, driver/vehicle events, all as raw records. No total miles, no summaries.
 
 Return the data as a JSON object with the following structure:
-${
-  schemaType === "OBT"
-    ? `{
+$${
+            schemaType === "OBT"
+              ? `{
   "rows": [
     { "column1": "value1", "column2": "value2", ... },
     ...
   ]
 }`
-    : `{
+              : `{
   "table1": [
     { "column1": "value1", "column2": "value2", ... },
     ...
@@ -443,11 +518,13 @@ ${
     ...
   ]
 }`
-}`,
+          }
+
+Do not include any explanations or extra text. Only return the JSON object.`,
         },
         {
           role: "user",
-          content: `Generate a ${businessType} dataset with ${rowCount} rows using this schema: ${
+          content: `Generate a ${businessType} dataset with ${rowCount} rows using this schema: $${
             schemaType === "OBT"
               ? JSON.stringify(schemaTemplate)
               : JSON.stringify(schemaTemplate, null, 2)
@@ -477,6 +554,11 @@ Return the data as a JSON object matching the structure described above.`,
             ]
           : Object.entries(generatedData).map(([tableName, rows]) => ({
               name: tableName,
+              type:
+                typeof schemaTemplate === "object" &&
+                !Array.isArray(schemaTemplate)
+                  ? (schemaTemplate as Record<string, any>)[tableName]?.type
+                  : undefined,
               rows: rows as any[],
             })),
     };

@@ -72,16 +72,18 @@ export default function DataTable({ data }: { data: any }) {
     );
   }
   return (
-    <div className="space-y-8">
+    <div>
       {data.tables.map((table: any, tableIndex: number) => {
         if (!Array.isArray(table.rows) || table.rows.length === 0) return null;
         const columns = Object.keys(table.rows[0]);
         const emptyRows =
           minRows - table.rows.length > 0 ? minRows - table.rows.length : 0;
         const tableName = table.name || `Table ${tableIndex + 1}`;
-        const suffix = FACT_TABLES.includes(tableName) ? "_fact" : "_dim";
+        let suffix = "";
+        if (table.type === "fact") suffix = "_fact";
+        else if (table.type === "dim") suffix = "_dim";
         return (
-          <div key={tableIndex} className="flex flex-col mt-6">
+          <div key={tableIndex} className="flex flex-col">
             <div className="text-xs text-gray-400 mb-1">
               {tableName}
               {suffix}
@@ -131,7 +133,7 @@ export default function DataTable({ data }: { data: any }) {
                 </tbody>
               </table>
             </div>
-            <div className="text-xs text-gray-400 mt-2">
+            <div className="text-xs text-gray-400 mt-2 mb-8">
               Showing first {Math.max(table.rows.length, minRows)} rows
             </div>
           </div>

@@ -179,11 +179,13 @@ export function MultiSelect({
   value,
   onChange,
   placeholder = "Select...",
+  className = "",
 }: {
   options: string[];
   value: string[];
   onChange: (val: string[]) => void;
   placeholder?: string;
+  className?: string;
 }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
@@ -198,14 +200,13 @@ export function MultiSelect({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
   return (
-    <div className="relative inline-block" ref={ref}>
+    <div className={`relative inline-block ${className}`} ref={ref}>
       <button
         type="button"
-        className="inline-flex items-center gap-1 px-2 py-1 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none"
+        className="inline-flex items-center gap-1 !px-1 !py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none"
         onClick={() => setOpen((v) => !v)}
       >
         {value.length === 0 ? placeholder : value.join(", ")}
-        <ChevronDownIcon className="size-4 ml-1" />
       </button>
       {open && (
         <div className="absolute z-50 mt-2 w-40 bg-zinc-800 text-white rounded shadow-lg border border-zinc-700 p-2">

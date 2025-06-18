@@ -6,10 +6,12 @@ const execAsync = promisify(exec);
 
 export async function POST() {
   try {
-    // Stop containers using docker-compose
-    await execAsync("docker-compose stop db metabase");
+    // Stop and remove containers and volumes using docker-compose down -v
+    await execAsync("docker-compose down -v");
 
-    return NextResponse.json({ message: "Containers stopped" });
+    return NextResponse.json({
+      message: "Containers and volumes stopped and removed",
+    });
   } catch (error: any) {
     console.error("Error stopping containers:", error);
     return NextResponse.json(
