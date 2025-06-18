@@ -131,7 +131,7 @@ export default function Home() {
     setMetabaseProgress(0);
     // Do NOT open a new tab immediately
     const toastId = toast.loading(
-      "⏳ Metabase is starting. We'll let you know when it's ready!",
+      "Installing Metabase. We'll let you know when it's ready!",
       { duration: Infinity, icon: null }
     );
     try {
@@ -170,7 +170,7 @@ export default function Home() {
                   href="http://localhost:3001"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ml-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs font-semibold"
+                  className="ml-2 px-3 py-1 bg-[#509EE3] text-white rounded hover:bg-[#6BA8E8] transition-colors text-xs font-semibold"
                   style={{ textDecoration: "none" }}
                 >
                   Open Metabase
