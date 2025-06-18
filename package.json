@@ -14,7 +14,6 @@
     "@types/pg": "^8.15.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "csv-writer": "^1.6.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.515.0",
     "next": "15.3.3",
