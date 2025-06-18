@@ -1,13 +1,13 @@
 # Dataset Generator
 
-**Generate high-quality, realistic datasets for analytics, dashboards, demos, and learning. Instantly preview, export as CSV or SQL, or analyze your data in Metabase.**
+**Generate high-quality, realistic datasets for demos, learning, and analysis. Instantly preview data, export as CSV or SQL, or explore in Metabase.**
 
 Features:
 
-- Conversational prompt builder for business/industry, schema, row count, and more
-- Instant data preview in the browser
-- Export as CSV (single or multi-table zip) or SQL inserts
-- One-click "Explore in Metabase" for instant analytics
+- Conversational prompt builder: choose business type, schema, row count, and more
+- Real-time data preview in the browser
+- Export as CSV (single file or multi-table ZIP) or as SQL inserts
+- One-click "Explore in Metabase" for instant analysis
 
 ## Prerequisites
 
@@ -17,10 +17,10 @@ Features:
 ## Stack
 
 - **Next.js** (App Router, TypeScript)
-- **Tailwind CSS + ShadCN UI** (modern, dark UI)
-- **OpenAI API** (for synthetic data)
-- **PostgreSQL** (Docker, only runs when needed)
-- **Metabase** (Docker, only runs when needed)
+- **Tailwind CSS + ShadCN UI** (modern, dark-themed UI)
+- **OpenAI API** (GPT-4o for data generation)
+- **PostgreSQL** (Dockerized, spun up only when needed)
+- **Metabase** (Dockerized, launched on demand)
 
 ## Getting Started
 
@@ -56,8 +56,9 @@ Features:
    - Click "Preview Data" to see a sample.
 
 5. **Export or Explore:**
-   - Download as CSV or SQL.
-   - Click "Explore in Metabase" to spin up Metabase and Postgres in Docker. The app will open Metabase in a new tab when ready.
+   - Download your dataset as CSV or SQL Inserts.
+   - Click "Explore in Metabase" to spin up Metabase and Postgres in Docker.
+   - The app will automatically open Metabase in a new tab once it's ready.
    - When done, click "Stop Metabase" to shut down and clean up Docker containers.
 
 ## Project Structure
@@ -67,16 +68,6 @@ Features:
 - `/app/api/metabase/start|stop|status/route.ts` – Docker orchestration for Metabase/Postgres
 - `/lib/export/` – CSV/SQL export logic
 - `/docker-compose.yml` – Used only for Metabase/Postgres, not for the app itself
-
-## Contributing
-
-Pull requests are welcome! If you have ideas, bugfixes, or want to add features, feel free to open an issue or PR. All contributions, feedback, and suggestions are appreciated.
-
-**Best practices:**
-
-- Keep UI clean and maintainable.
-- Add comments for any non-obvious logic.
-- Test your changes locally before submitting a PR.
 
 ## Connecting to the Postgres Database in Metabase
 
@@ -88,5 +79,9 @@ When you use "Explore in Metabase," your generated dataset is saved to the `anal
 - **Password:** `postgres`
 - **Database:** `dataset_generator`
 - **Schema:** `analytics`
+
+## Contributing
+
+Pull requests are welcome! If you have ideas, bug fixes, or feature suggestions, feel free to open an issue or submit a PR. All contributions and feedback are appreciated.
 
 MIT License
