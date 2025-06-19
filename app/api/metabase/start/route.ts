@@ -21,13 +21,19 @@ export async function POST() {
       'docker ps --filter "name=dataset_generator" --format "{{.Names}}"'
     );
     if (runningContainers.includes("dataset_generator_metabase")) {
-      return NextResponse.json({ message: "Metabase is already running" });
+      return NextResponse.json({
+        message: "Metabase is already running",
+        url: "http://localhost:3001",
+      });
     }
 
     // Start containers using docker-compose
     await execAsync("docker-compose up -d db metabase");
 
-    return NextResponse.json({ message: "Metabase is starting" });
+    return NextResponse.json({
+      message: "Metabase is starting",
+      url: "http://localhost:3001",
+    });
   } catch (error: any) {
     console.error("Error starting Metabase:", error);
     return NextResponse.json(

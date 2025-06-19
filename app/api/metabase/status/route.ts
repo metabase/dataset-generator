@@ -22,11 +22,18 @@ export async function GET() {
       });
     }
 
-    // Check if Metabase is responding
+    // Check if Metabase is actually ready by checking its setup endpoint
     try {
-      const response = await fetch("http://localhost:3001/api/health");
-      if (response.ok) {
+      const setupResponse = await fetch(
+        "http://localhost:3001/api/session/properties"
+      );
+      if (setupResponse.ok) {
         return NextResponse.json({ ready: true });
+      } else {
+        return NextResponse.json({
+          ready: false,
+          message: "Metabase is still initializing",
+        });
       }
     } catch (error) {
       // Metabase is still starting up
@@ -35,11 +42,6 @@ export async function GET() {
         message: "Metabase is starting up",
       });
     }
-
-    return NextResponse.json({
-      ready: false,
-      message: "Metabase is not ready",
-    });
   } catch (error) {
     console.error("Error checking Metabase status:", error);
     return NextResponse.json(
