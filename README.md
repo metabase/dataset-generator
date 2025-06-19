@@ -1,13 +1,13 @@
 # Dataset Generator
 
-**Generate high-quality, realistic datasets for demos, learning, and analysis. Instantly preview data, export as CSV or SQL, or explore in Metabase.**
+**Generate high-quality, realistic datasets for demos, learning, and analysis. Instantly preview data, export as CSV or SQL, and explore with Metabase.**
 
 Features:
 
 - Conversational prompt builder: choose business type, schema, row count, and more
 - Real-time data preview in the browser
 - Export as CSV (single file or multi-table ZIP) or as SQL inserts
-- One-click "Explore in Metabase" for instant analysis
+- One-click Metabase launch for data exploration
 
 ## Prerequisites
 
@@ -18,8 +18,7 @@ Features:
 
 - **Next.js** (App Router, TypeScript)
 - **Tailwind CSS + ShadCN UI** (modern, dark-themed UI)
-- **OpenAI API** (GPT-4o for data generation)
-- **PostgreSQL** (Dockerized, spun up only when needed)
+- **OpenAI API** (GPT-4 for data generation)
 - **Metabase** (Dockerized, launched on demand)
 
 ## Getting Started
@@ -57,28 +56,28 @@ Features:
 
 5. **Export or Explore:**
    - Download your dataset as CSV or SQL Inserts.
-   - Click "Explore in Metabase" to spin up Metabase and Postgres in Docker.
-   - The app will automatically open Metabase in a new tab once it's ready.
+   - Click "Start Metabase" to spin up Metabase in Docker.
+   - Once Metabase is ready, click "Open Metabase" to explore your data.
    - When done, click "Stop Metabase" to shut down and clean up Docker containers.
 
 ## Project Structure
 
 - `/app/page.tsx` – Main UI and prompt builder
 - `/app/api/generate/route.ts` – Synthetic data generator (OpenAI)
-- `/app/api/metabase/start|stop|status/route.ts` – Docker orchestration for Metabase/Postgres
+- `/app/api/metabase/start|stop|status/route.ts` – Docker orchestration for Metabase
 - `/lib/export/` – CSV/SQL export logic
-- `/docker-compose.yml` – Used only for Metabase/Postgres, not for the app itself
+- `/docker-compose.yml` – Used only for Metabase, not for the app itself
 
-## Connecting to the Postgres Database in Metabase
+## Using Metabase
 
-When you use "Explore in Metabase," your generated dataset is saved to the `analytics` schema in the local Postgres database. You can connect to this database using the following settings:
+When you click "Start Metabase", it will launch Metabase in a Docker container. Once ready:
 
-- **Host:** `db`
-- **Port:** `5432`
-- **User:** `postgres`
-- **Password:** `postgres`
-- **Database:** `dataset_generator`
-- **Schema:** `analytics`
+1. Click "Open Metabase" to access the Metabase interface
+2. Follow Metabase's setup process
+3. To analyze your generated data:
+   - Use the CSV export feature to download your dataset
+   - In Metabase, use the "Upload Data" feature to analyze your CSV files
+   - Or connect to your own database where you've loaded the data
 
 ## Contributing
 
