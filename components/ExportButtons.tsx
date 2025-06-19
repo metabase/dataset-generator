@@ -15,11 +15,9 @@ export default function ExportButtons({
   const handleExport = async (type: "csv" | "sql") => {
     const toastId = toast.loading(
       <span className="text-sm">
-        {type === "csv"
-          ? "Generating CSV file... This can take a few minutes"
-          : "Generating SQL file... This can take a few minutes"}
+        ⌛ Generating {type.toUpperCase()} file... This can take a few minutes
       </span>,
-      { duration: Infinity }
+      { duration: Infinity, icon: null }
     );
     try {
       const response = await fetch("/api/generate", {
@@ -47,7 +45,9 @@ export default function ExportButtons({
         a.download = `dataset.zip`;
         a.click();
         toast.dismiss(toastId);
-        toast.success(<span className="text-sm">ZIP downloaded!</span>);
+        toast.success(<span className="text-sm">✅ ZIP downloaded!</span>, {
+          icon: null,
+        });
         return;
       }
       let content = "";
@@ -85,11 +85,17 @@ export default function ExportButtons({
       a.click();
       toast.dismiss(toastId);
       toast.success(
-        <span className="text-sm">{type.toUpperCase()} downloaded!</span>
+        <span className="text-sm">✅ {type.toUpperCase()} downloaded!</span>,
+        { icon: null }
       );
     } catch (err) {
       toast.dismiss(toastId);
-      toast.error(`Failed to generate ${type.toUpperCase()}`);
+      toast.error(
+        <span className="text-sm">
+          ❌ Failed to generate {type.toUpperCase()}
+        </span>,
+        { icon: null }
+      );
     }
   };
 
