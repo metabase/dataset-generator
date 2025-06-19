@@ -43,8 +43,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isInstallingMetabase, setIsInstallingMetabase] = useState(false);
-  const [metabaseMessage, setMetabaseMessage] = useState("");
-  const [metabaseProgress, setMetabaseProgress] = useState(0);
   const [isMetabaseRunning, setIsMetabaseRunning] = useState(false);
   const [showContext, setShowContext] = useState(false);
 
@@ -94,8 +92,10 @@ export default function Home() {
     setError("");
     setData(null);
     const toastId = toast.loading(
-      <span className="text-sm">Hold tight while we generate a preview!</span>,
-      { duration: Infinity }
+      <span className="text-sm">
+        ⌛ Hold tight while we generate a preview!
+      </span>,
+      { duration: Infinity, icon: null }
     );
     const previewPrompt = {
       ...prompt,
@@ -114,12 +114,16 @@ export default function Home() {
       setData(result.data);
       toast.dismiss(toastId);
       toast.success(
-        <span className="text-sm">Preview generated successfully!</span>
+        <span className="text-sm">✅ Preview generated successfully!</span>,
+        { icon: null }
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       toast.dismiss(toastId);
-      toast.error("Failed to generate dataset");
+      toast.error(
+        <span className="text-sm">❌ Failed to generate dataset</span>,
+        { icon: null }
+      );
     } finally {
       setLoading(false);
     }
@@ -128,10 +132,10 @@ export default function Home() {
   // Utility: Start Metabase in Docker
   async function startMetabase() {
     setIsInstallingMetabase(true);
-    setMetabaseProgress(0);
-    // Do NOT open a new tab immediately
     const toastId = toast.loading(
-      "Installing Metabase. We'll let you know when it's ready!",
+      <span className="text-sm">
+        ⌛ Starting Metabase... This can take a few minutes
+      </span>,
       { duration: Infinity, icon: null }
     );
     try {
@@ -141,105 +145,120 @@ export default function Home() {
       if (!response.ok) {
         const err = await response.json();
         setIsInstallingMetabase(false);
-        setMetabaseProgress(0);
         toast.dismiss(toastId);
-        toast.error(err.error || "Failed to start Metabase", {
-          duration: Infinity,
-          icon: null,
-        });
+        toast.error(
+          <span className="text-sm">
+            ❌ {err.error || "Failed to start Metabase"}
+          </span>,
+          { duration: Infinity, icon: null }
+        );
         return;
       }
       const data = await response.json();
-      // Wait for Metabase to be ready
-      let attempts = 0;
-      const maxAttempts = 30; // 2 minutes total (4 seconds * 30)
-      const checkMetabase = async () => {
+
+      // Start checking Metabase status
+      const checkStatus = async () => {
         try {
-          const checkResponse = await fetch("/api/metabase/status");
-          const status = await checkResponse.json();
-          setMetabaseProgress(Math.min(100, (attempts / maxAttempts) * 100));
+          const statusResponse = await fetch("/api/metabase/status");
+          const status = await statusResponse.json();
+
           if (status.ready) {
             setIsInstallingMetabase(false);
-            setMetabaseProgress(100);
             setIsMetabaseRunning(true);
             toast.dismiss(toastId);
-            toast(
+            toast.success(
               <span className="text-sm flex items-center gap-2">
-                Metabase is ready!{" "}
+                ✅ Metabase is ready!{" "}
                 <a
                   href="http://localhost:3001"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ml-2 px-3 py-1 bg-[#509EE3] text-white rounded hover:bg-[#6BA8E8] transition-colors text-xs font-semibold"
-                  style={{ textDecoration: "none" }}
+                  style={{
+                    backgroundColor: "#509EE3",
+                    color: "white",
+                    padding: "4px 12px",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    display: "inline-block",
+                    marginLeft: "8px",
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#6BA8E8")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#509EE3")
+                  }
                 >
                   Open Metabase
                 </a>
               </span>,
               { duration: 15000, icon: null }
             );
-            return;
-          }
-          attempts++;
-          if (attempts < maxAttempts) {
-            setTimeout(checkMetabase, 4000); // Check every 4 seconds
           } else {
-            throw new Error("Metabase failed to start within timeout");
+            // Check again in 5 seconds
+            setTimeout(checkStatus, 5000);
           }
         } catch (error) {
-          setIsInstallingMetabase(false);
-          setMetabaseProgress(0);
-          setIsMetabaseRunning(false);
-          toast.dismiss(toastId);
-          toast.error("Failed to start Metabase. Please try again.", {
-            duration: Infinity,
-            icon: null,
-          });
-          console.error("Error checking Metabase status:", error);
+          // If there's an error checking status, try again in 5 seconds
+          setTimeout(checkStatus, 5000);
         }
       };
-      checkMetabase();
+
+      // Start checking status
+      checkStatus();
     } catch (error) {
       setIsInstallingMetabase(false);
-      setMetabaseProgress(0);
       setIsMetabaseRunning(false);
       toast.dismiss(toastId);
-      toast.error("Failed to start Metabase. Please try again.", {
-        duration: Infinity,
-        icon: null,
-      });
+      toast.error(
+        <span className="text-sm">
+          ❌ Failed to start Metabase. Please try again.
+        </span>,
+        { duration: Infinity, icon: null }
+      );
       console.error("Error starting Metabase:", error);
     }
   }
 
   // Utility: Stop Metabase in Docker
   async function stopMetabase() {
-    const toastId = toast.loading("Stopping Metabase and cleaning up...", {
-      duration: Infinity,
-      icon: null,
-    });
+    const toastId = toast.loading(
+      <span className="text-sm">
+        ⌛ Stopping Metabase and cleaning up dataset generator resources...
+      </span>,
+      { duration: Infinity, icon: null }
+    );
     try {
       const response = await fetch("/api/metabase/stop", { method: "POST" });
       if (!response.ok) {
         const err = await response.json();
         toast.dismiss(toastId);
-        toast.error(err.error || "Failed to stop Metabase", {
-          duration: Infinity,
-          icon: null,
-        });
+        toast.error(
+          <span className="text-sm">
+            ❌ {err.error || "Failed to stop Metabase"}
+          </span>,
+          { duration: Infinity, icon: null }
+        );
         return;
       }
       setIsMetabaseRunning(false);
       toast.dismiss(toastId);
-      toast.success("Metabase stopped and cleaned up.", {
-        icon: null,
-      });
+      toast.success(
+        <span className="text-sm">
+          ✅ Dataset generator resources cleaned up.
+        </span>,
+        { icon: null }
+      );
     } catch (error) {
       toast.dismiss(toastId);
-      toast.error("Failed to stop Metabase. Please try again.", {
-        duration: Infinity,
-        icon: null,
-      });
+      toast.error(
+        <span className="text-sm">
+          ❌ Failed to stop Metabase. Please try again.
+        </span>,
+        { duration: Infinity, icon: null }
+      );
       console.error("Error stopping Metabase:", error);
     }
   }
