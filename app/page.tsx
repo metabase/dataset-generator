@@ -13,8 +13,7 @@ import {
 import DataTable from "@/components/DataTable";
 import ExportButtons from "@/components/ExportButtons";
 import { toCSV, toSQL, downloadFile } from "@/lib/export";
-import { Toaster } from "@/components/ExportButtons";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 interface Prompt {
   rowCount: number;
@@ -354,8 +353,8 @@ export default function Home() {
                   Multiple Tables (Star Schema)
                 </SelectItem>
               </SelectContent>
-            </Select>{" "}
-            schema, covering{" "}
+            </Select>
+            , covering{" "}
             <MultiSelect
               className="inline-block align-baseline !px-1 !py-0"
               options={timeRangeOptions}
@@ -431,7 +430,7 @@ export default function Home() {
                 </SelectItem>
               </SelectContent>
             </Select>{" "}
-            granularity.{" "}
+            granularity
             <button
               type="button"
               aria-label="Add advanced context"
@@ -442,8 +441,8 @@ export default function Home() {
               title="Add additional context"
               style={{ verticalAlign: "middle" }}
             >
-              <span role="img" aria-label="Advanced">
-                ⚙️
+              <span role="img" aria-label="Advanced options">
+                ...
               </span>
             </button>
             {showContext && (
