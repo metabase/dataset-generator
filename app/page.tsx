@@ -101,6 +101,7 @@ export default function Home() {
       rowCount: 10,
       context: prompt.context,
       isPreview: true,
+      schemaType: prompt.schemaType === "star" ? "Star Schema" : "OBT",
     };
     try {
       const response = await fetch("/api/generate", {
@@ -114,6 +115,44 @@ export default function Home() {
       toast.dismiss(toastId);
       toast.success(
         <span className="text-sm">✅ Preview generated successfully!</span>,
+        { icon: null }
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      toast.dismiss(toastId);
+      toast.error(
+        <span className="text-sm">❌ Failed to generate dataset</span>,
+        { icon: null }
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    setLoading(true);
+    setError("");
+    setData(null);
+    const toastId = toast.loading(
+      <span className="text-sm">⌛ Generating dataset...</span>,
+      { duration: Infinity, icon: null }
+    );
+    const generatePrompt = {
+      ...prompt,
+      schemaType: prompt.schemaType === "star" ? "Star Schema" : "OBT",
+    };
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(generatePrompt),
+      });
+      if (!response.ok) throw new Error("Failed to generate dataset");
+      const result = await response.json();
+      setData(result.data);
+      toast.dismiss(toastId);
+      toast.success(
+        <span className="text-sm">✅ Dataset generated successfully!</span>,
         { icon: null }
       );
     } catch (err) {
