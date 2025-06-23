@@ -39,9 +39,6 @@ services:
     environment:
       - NODE_ENV=development
       - SCRAPER_HOST=scraper
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/dataset_generator
-    depends_on:
-      - db
     ports:
       - "3000:3000"
 
