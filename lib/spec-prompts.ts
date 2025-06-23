@@ -10,51 +10,320 @@ type EnhancedSchema = {
 
 const businessTypeInstructions: Record<string, string> = {
   SaaS: `
-    - **Entities**: Include 'user', 'plan', and 'marketing_channel' as separate entities. Users have attributes like 'plan' (linked to the plan entity), 'billing_cycle', and 'country'. Plans have 'plan_id', 'name', 'billing_cycle', and 'price'. Marketing channels have 'channel_id' and 'name'.
+    - **Entities**: Include 'user', 'plan', and 'marketing_channel' as separate entities. Users have attributes like 'user_id', 'name', 'email', 'plan' (linked to the plan entity), 'billing_cycle', 'country', and 'signup_date'. Plans have 'plan_id', 'name', 'billing_cycle', and 'price'. Marketing channels have 'channel_id' and 'name'.
     - **Events**: Simulate a user lifecycle. Start with a 'signup' event (the initial event). Schedule recurring 'renewal' events based on their billing cycle. Generate random 'api_call' or 'feature_usage' events to represent product engagement. Model 'cancellation' events using a monthly churn rate. Add a 'failed_renewal' event with a small probability (e.g., 2% of renewals). Some users should have only a signup event (silent churn).
     - **Outputs**: For 'signup' and 'renewal' events: if the user's plan is 'Free' or 'Trial', set 'payment_amount' to 0 and use only the plan in the conditional key (e.g., "plan=Free": 0). For paid plans, set 'payment_amount' to the user's plan price and use both plan and billing_cycle in the conditional key (e.g., "plan=Basic & billing_cycle=monthly": 10). For other events, it should be 0. For 'failed_renewal', set 'payment_amount' to 0.
+    - **CRITICAL - All fields must be realistic SaaS values, NOT random strings:**
+      - 'plan': realistic plans like "Free", "Basic", "Pro", "Enterprise", "Trial"
+      - 'billing_cycle': realistic cycles like "monthly", "annual", "quarterly"
+      - 'marketing_channel': realistic channels like "Organic Search", "Paid Search", "Social Media", "Email", "Direct", "Referral"
+      - 'country': realistic countries like "United States", "Canada", "United Kingdom", "Germany"
+      - 'event_type': realistic events like "signup", "renewal", "cancellation", "api_call", "feature_usage"
+    - **Schema Requirements**: For each entity, include all attributes needed for analytics and joins. Do not omit any key business fields. Every event in the event stream must reference all relevant entities (e.g., every event must have a valid user_id, plan_id, etc.). For each attribute, specify a realistic faker method and value range.
+    - **CRITICAL**: NEVER generate random strings or alphanumeric codes for business fields. Use realistic SaaS terminology and values that an analyst would expect to see in real SaaS data.
+    - **EXAMPLE JSON SPEC FORMAT** (use this exact format for realistic values):
+      {
+        "entities": [
+          {
+            "name": "user",
+            "attributes": {
+              "user_id": {"type": "id", "prefix": "usr_"},
+              "plan": {"type": "choice", "values": ["Free", "Basic", "Pro", "Enterprise", "Trial"], "weights": [0.3, 0.25, 0.25, 0.15, 0.05]},
+              "billing_cycle": {"type": "choice", "values": ["monthly", "annual", "quarterly"], "weights": [0.6, 0.3, 0.1]},
+              "marketing_channel": {"type": "choice", "values": ["Organic Search", "Paid Search", "Social Media", "Email", "Direct", "Referral"], "weights": [0.3, 0.2, 0.2, 0.15, 0.1, 0.05]},
+              "country": {"type": "choice", "values": ["United States", "Canada", "United Kingdom", "Germany", "Australia"], "weights": [0.6, 0.1, 0.1, 0.1, 0.1]}
+            }
+          }
+        ],
+        "event_stream_table": {
+          "name": "saas_events",
+          "columns": [
+            {"name": "event_type", "source": {"type": "choice", "values": ["signup", "renewal", "cancellation", "api_call", "feature_usage"], "weights": [0.2, 0.3, 0.1, 0.25, 0.15]}},
+            {"name": "plan", "source": {"type": "choice", "values": ["Free", "Basic", "Pro", "Enterprise", "Trial"], "weights": [0.3, 0.25, 0.25, 0.15, 0.05]}},
+            {"name": "billing_cycle", "source": {"type": "choice", "values": ["monthly", "annual", "quarterly"], "weights": [0.6, 0.3, 0.1]}},
+            {"name": "marketing_channel", "source": {"type": "choice", "values": ["Organic Search", "Paid Search", "Social Media", "Email", "Direct", "Referral"], "weights": [0.3, 0.2, 0.2, 0.15, 0.1, 0.05]}}
+          ]
+        }
+      }
     - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
   `,
   Ecommerce: `
-    - **Entities**: Include 'customer', 'product', and 'order' as separate entities. Products have 'product_id', 'name', 'category', and 'price'. Orders have 'order_id', 'order_date', 'shipping_cost', and 'discount_amount'.
+    - **Entities**: Include 'customer', 'product', and 'order' as separate entities. Customers have 'customer_id', 'name', 'email', 'country'. Products have 'product_id', 'product_name', 'category', and 'price'. Orders have 'order_id', 'order_date', 'shipping_cost', and 'discount_amount'.
     - **Events**: The main event sequence is 'view_item', 'add_to_cart', 'start_checkout', and 'purchase'. Also include 'refund' events. Not every sequence will end in a purchase.
-    - **Outputs**: For 'purchase' events, generate an 'order_id'. The final table should include columns like 'quantity', 'item_price', 'shipping_cost', and 'discount_amount'. For other events, these can be null or 0.
+    - **Outputs**: For 'purchase' events, always reference the product and order entities for price, shipping_cost, and discount_amount. Do not use a literal 0 for these fields in purchase events. For non-purchase events, it is acceptable to use 0 for price, shipping_cost, and discount_amount.
+    - **CRITICAL - All fields must be realistic ecommerce values, NOT random strings:**
+      - 'product_name': realistic names like "Wireless Bluetooth Headphones", "Organic Cotton T-Shirt", "Stainless Steel Water Bottle"
+      - 'category': realistic categories like "Electronics", "Clothing", "Home & Garden", "Sports & Outdoors", "Books"
+      - 'payment_method': realistic methods like "Credit Card", "Debit Card", "PayPal", "Apple Pay", "Google Pay"
+      - 'order_status': realistic statuses like "Pending", "Processing", "Shipped", "Delivered", "Cancelled"
+      - 'shipping_method': realistic methods like "Standard", "Express", "Overnight", "Free Shipping"
+      - 'event_type': realistic events like "view_item", "add_to_cart", "start_checkout", "purchase", "refund"
+    - **Schema Requirements**: For each entity, include all attributes needed for analytics and joins. Do not omit any key business fields. Every event in the event stream must reference all relevant entities (e.g., every purchase event must have a valid product_id, order_id, customer_id, etc.). For each attribute, specify a realistic faker method and value range.
+    - **Critical**: Every event must have a valid product_id, product_name, category, and price. Use faker.commerce.productName(), faker.commerce.department(), and faker.commerce.price().
+    - **CRITICAL**: NEVER generate random strings or alphanumeric codes for business fields. Use realistic ecommerce terminology and values that an analyst would expect to see in real ecommerce data.
+    - **EXAMPLE JSON SPEC FORMAT** (use this exact format for realistic values):
+      {
+        "entities": [
+          {
+            "name": "product",
+            "attributes": {
+              "product_id": {"type": "id", "prefix": "prod_"},
+              "product_name": {"type": "choice", "values": ["Wireless Bluetooth Headphones", "Organic Cotton T-Shirt", "Stainless Steel Water Bottle", "Smartphone Case", "Running Shoes"], "weights": [0.2, 0.2, 0.2, 0.2, 0.2]},
+              "category": {"type": "choice", "values": ["Electronics", "Clothing", "Home & Garden", "Sports & Outdoors", "Books"], "weights": [0.3, 0.25, 0.2, 0.15, 0.1]},
+              "payment_method": {"type": "choice", "values": ["Credit Card", "Debit Card", "PayPal", "Apple Pay", "Google Pay"], "weights": [0.4, 0.25, 0.2, 0.1, 0.05]},
+              "order_status": {"type": "choice", "values": ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"], "weights": [0.1, 0.2, 0.3, 0.35, 0.05]},
+              "shipping_method": {"type": "choice", "values": ["Standard", "Express", "Overnight", "Free Shipping"], "weights": [0.5, 0.2, 0.1, 0.2]}
+            }
+          }
+        ],
+        "event_stream_table": {
+          "name": "ecommerce_events",
+          "columns": [
+            {"name": "event_type", "source": {"type": "choice", "values": ["view_item", "add_to_cart", "start_checkout", "purchase", "refund"], "weights": [0.4, 0.2, 0.15, 0.2, 0.05]}},
+            {"name": "product_name", "source": {"type": "choice", "values": ["Wireless Bluetooth Headphones", "Organic Cotton T-Shirt", "Stainless Steel Water Bottle", "Smartphone Case", "Running Shoes"], "weights": [0.2, 0.2, 0.2, 0.2, 0.2]}},
+            {"name": "category", "source": {"type": "choice", "values": ["Electronics", "Clothing", "Home & Garden", "Sports & Outdoors", "Books"], "weights": [0.3, 0.25, 0.2, 0.15, 0.1]}},
+            {"name": "payment_method", "source": {"type": "choice", "values": ["Credit Card", "Debit Card", "PayPal", "Apple Pay", "Google Pay"], "weights": [0.4, 0.25, 0.2, 0.1, 0.05]}},
+            {"name": "order_status", "source": {"type": "choice", "values": ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"], "weights": [0.1, 0.2, 0.3, 0.35, 0.05]}}
+          ]
+        }
+      }
     - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
   `,
   Healthcare: `
-    - **Entities**: Include 'patient', 'provider', and 'facility' as separate entities. The main entity is the 'patient'. Other entities could be 'provider' and 'facility'.
-    - **Events**: Generate patient-centric events like 'patient_visit', 'treatment_administered', and 'procedure_performed'. Also include billing events like 'claim_submitted', 'claim_paid', and 'claim_denied'.
-    - **Outputs**: For procedures, include 'cpt_code' and 'procedure_cost'. For billing, include 'claim_id', 'claim_amount', and 'insurance_payout'.
+    - **Entities**: Include 'patient', 'provider', and 'facility' as separate entities. Patients have 'patient_id', 'name', 'dob', 'gender', 'insurance_type'. Providers have 'provider_id', 'name', 'specialty'. Facilities have 'facility_id', 'name', 'location', 'facility_type'.
+    - **Events**: Generate patient-centric events like 'patient_visit', 'treatment_administered', 'procedure_performed', 'admission', 'discharge', and billing events like 'claim_submitted', 'claim_paid', 'claim_denied'.
+    - **Outputs**: For each event, include all relevant business metrics and fields for analytics:
+      - **CRITICAL - Numeric/currency fields must be numbers (float/int), NOT strings or IDs:**
+        - 'procedure_cost': number (float, USD, range 100-2000), e.g., 1200.50
+        - 'claim_amount': number (float, USD, range 100-5000), e.g., 1500.00  
+        - 'insurance_payout': number (float, USD, 60-95% of claim_amount), e.g., 1200.00
+        - 'visit_duration': number (integer, minutes, range 15-480), e.g., 45
+      - **CRITICAL - All other fields must be realistic healthcare values, NOT random strings:**
+        - 'procedure_code': realistic CPT codes like "99213", "99214", "93010", "71045"
+        - 'diagnosis_code': realistic ICD-10 codes like "E11.9", "I10", "Z51.11", "Z00.00"
+        - 'procedure_type': realistic types like "Office Visit", "Laboratory Test", "X-Ray", "MRI"
+        - 'claim_status': realistic statuses like "Approved", "Pending", "Denied", "Under Review"
+        - 'denied_reason': realistic reasons like "Missing Documentation", "Pre-authorization Required", "Out of Network"
+        - 'insurance_type': realistic types like "PPO", "HMO", "Medicare", "Medicaid"
+        - 'specialty': realistic specialties like "Cardiology", "Dermatology", "Internal Medicine"
+        - 'facility_type': realistic types like "Hospital", "Outpatient Clinic", "Urgent Care"
+      - **Business logic relationships:**
+        - 'insurance_payout' should be 60-95% of 'claim_amount'
+        - 'claim_amount' should be related to 'procedure_cost' (usually 1.2-2x procedure_cost)
+        - For 'claim_denied' events, 'insurance_payout' should be 0
+      - **Additional fields**: 'admission_date', 'discharge_date', etc.
+    - **Schema Requirements**: For each entity, include all attributes needed for analytics and joins. Do not omit any key business fields. Every event in the event stream must reference all relevant entities (e.g., every procedure event must have a valid patient_id, provider_id, facility_id, etc.). For each attribute, specify a realistic faker method and value range.
+    - **CRITICAL**: NEVER generate random strings or alphanumeric codes for business fields. Use realistic healthcare terminology, codes, and values that an analyst would expect to see in real healthcare data.
+    - **EXAMPLE JSON SPEC FORMAT** (use this exact format for realistic values):
+      {
+        "entities": [
+          {
+            "name": "patient",
+            "attributes": {
+              "patient_id": {"type": "id", "prefix": "pat_"},
+              "name": {"type": "faker", "method": "person.fullName"},
+              "insurance_type": {"type": "choice", "values": ["PPO", "HMO", "Medicare", "Medicaid", "Tricare"], "weights": [0.4, 0.3, 0.15, 0.1, 0.05]}
+            }
+          }
+        ],
+        "event_stream_table": {
+          "name": "healthcare_events",
+          "columns": [
+            {"name": "procedure_code", "source": {"type": "choice", "values": ["99213", "99214", "99215", "93010", "71045", "70450"], "weights": [0.3, 0.25, 0.2, 0.1, 0.1, 0.05]}},
+            {"name": "diagnosis_code", "source": {"type": "choice", "values": ["E11.9", "I10", "Z51.11", "Z00.00", "Z23", "Z79.4"], "weights": [0.2, 0.15, 0.15, 0.15, 0.15, 0.2]}},
+            {"name": "procedure_type", "source": {"type": "choice", "values": ["Office Visit", "Laboratory Test", "X-Ray", "MRI", "CT Scan", "Ultrasound"], "weights": [0.4, 0.2, 0.15, 0.1, 0.1, 0.05]}},
+            {"name": "claim_status", "source": {"type": "choice", "values": ["Approved", "Pending", "Denied", "Under Review"], "weights": [0.6, 0.25, 0.1, 0.05]}},
+            {"name": "denied_reason", "source": {"type": "choice", "values": ["Missing Documentation", "Pre-authorization Required", "Out of Network", "Experimental Treatment"], "weights": [0.4, 0.3, 0.2, 0.1]}}
+          ]
+        }
+      }
     - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
   `,
   Fintech: `
-    - **Entities**: Include 'account', 'currency', and 'transaction' as separate entities. The core entity is 'account'.
+    - **Entities**: Include 'account', 'currency', and 'transaction' as separate entities. Accounts have 'account_id', 'open_date', 'type', 'country'. Currencies have 'currency_code', 'country', 'exchange_rate'. Transactions have 'transaction_id', 'account_id', 'amount', 'fee', 'currency', 'status', 'is_fraud'.
     - **Events**: Model financial transactions. Generate events like 'deposit', 'withdrawal', 'transfer', and 'payment'. Each should have a status ('completed', 'pending', 'failed').
     - **Outputs**: Each event row must have a 'transaction_id'. Key columns are 'amount', 'fee', and 'currency'. Critically, include a boolean 'is_fraud' flag with a realistic (low) probability of being true.
+    - **CRITICAL - All fields must be realistic fintech values, NOT random strings:**
+      - 'account_type': realistic types like "Checking", "Savings", "Credit", "Investment", "Business"
+      - 'transaction_type': realistic types like "Deposit", "Withdrawal", "Transfer", "Payment", "Fee"
+      - 'status': realistic statuses like "Completed", "Pending", "Failed", "Cancelled"
+      - 'currency_code': realistic codes like "USD", "EUR", "GBP", "JPY", "CAD"
+      - 'payment_method': realistic methods like "ACH", "Wire Transfer", "Card", "Check", "Mobile"
+    - **Schema Requirements**: For each entity, include all attributes needed for analytics and joins. Do not omit any key business fields. Every event in the event stream must reference all relevant entities (e.g., every transaction must have a valid account_id, etc.). For each attribute, specify a realistic faker method and value range.
+    - **CRITICAL**: NEVER generate random strings or alphanumeric codes for business fields. Use realistic fintech terminology and values that an analyst would expect to see in real fintech data.
+    - **EXAMPLE JSON SPEC FORMAT** (use this exact format for realistic values):
+      {
+        "entities": [
+          {
+            "name": "account",
+            "attributes": {
+              "account_id": {"type": "id", "prefix": "acc_"},
+              "account_type": {"type": "choice", "values": ["Checking", "Savings", "Credit", "Investment", "Business"], "weights": [0.4, 0.25, 0.2, 0.1, 0.05]},
+              "currency_code": {"type": "choice", "values": ["USD", "EUR", "GBP", "JPY", "CAD"], "weights": [0.7, 0.1, 0.1, 0.05, 0.05]}
+            }
+          }
+        ],
+        "event_stream_table": {
+          "name": "fintech_transactions",
+          "columns": [
+            {"name": "transaction_type", "source": {"type": "choice", "values": ["Deposit", "Withdrawal", "Transfer", "Payment", "Fee"], "weights": [0.3, 0.25, 0.2, 0.2, 0.05]}},
+            {"name": "status", "source": {"type": "choice", "values": ["Completed", "Pending", "Failed", "Cancelled"], "weights": [0.8, 0.15, 0.04, 0.01]}},
+            {"name": "payment_method", "source": {"type": "choice", "values": ["ACH", "Wire Transfer", "Card", "Check", "Mobile"], "weights": [0.4, 0.1, 0.3, 0.1, 0.1]}}
+          ]
+        }
+      }
     - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
   `,
   Education: `
-    - **Entities**: Include 'student', 'course', and 'instructor' as separate entities. Key entities are 'student', 'course', and 'instructor'.
-    - **Events**: Track student activities: 'course_enrollment', 'tuition_payment', 'lecture_viewed', 'assignment_submitted', 'grade_received'.
-    - **Outputs**: For payments, distinguish between 'tuition_fee', 'scholarship_amount', and 'net_paid'. Other events can have these as 0.
+    - **Entities**: Include 'student', 'course', and 'department' as separate entities. Students have 'student_id', 'name', 'major', 'enrollment_date', 'gpa'. Courses have 'course_id', 'course_name', 'department', 'credits', 'instructor'. Departments have 'department_id', 'name', 'college'.
+    - **Events**: Model student academic activities. Generate events like 'enrollment', 'grade_assigned', 'attendance', 'assignment_submitted', 'exam_taken'.
+    - **Outputs**: Each event should include relevant academic metrics like 'grade', 'attendance_percentage', 'assignment_score', 'exam_score'.
+    - **CRITICAL - All fields must be realistic education values, NOT random strings:**
+      - 'major': realistic majors like "Computer Science", "Business Administration", "Psychology", "Engineering", "Biology"
+      - 'course_name': realistic names like "Introduction to Programming", "Business Statistics", "Psychology 101", "Calculus I", "Organic Chemistry"
+      - 'department': realistic departments like "Computer Science", "Business", "Psychology", "Mathematics", "Biology"
+      - 'grade': realistic grades like "A", "B", "C", "D", "F", "A-", "B+"
+      - 'enrollment_status': realistic statuses like "Enrolled", "Dropped", "Graduated", "On Leave"
+    - **Schema Requirements**: For each entity, include all attributes needed for analytics and joins. Do not omit any key business fields. Every event in the event stream must reference all relevant entities (e.g., every grade event must have a valid student_id, course_id, etc.). For each attribute, specify a realistic faker method and value range.
+    - **CRITICAL**: NEVER generate random strings or alphanumeric codes for business fields. Use realistic education terminology and values that an analyst would expect to see in real education data.
+    - **EXAMPLE JSON SPEC FORMAT** (use this exact format for realistic values):
+      {
+        "entities": [
+          {
+            "name": "student",
+            "attributes": {
+              "student_id": {"type": "id", "prefix": "stu_"},
+              "major": {"type": "choice", "values": ["Computer Science", "Business Administration", "Psychology", "Engineering", "Biology"], "weights": [0.25, 0.25, 0.2, 0.2, 0.1]},
+              "department": {"type": "choice", "values": ["Computer Science", "Business", "Psychology", "Mathematics", "Biology"], "weights": [0.25, 0.25, 0.2, 0.2, 0.1]},
+              "enrollment_status": {"type": "choice", "values": ["Enrolled", "Dropped", "Graduated", "On Leave"], "weights": [0.8, 0.1, 0.08, 0.02]}
+            }
+          }
+        ],
+        "event_stream_table": {
+          "name": "education_events",
+          "columns": [
+            {"name": "course_name", "source": {"type": "choice", "values": ["Introduction to Programming", "Business Statistics", "Psychology 101", "Calculus I", "Organic Chemistry"], "weights": [0.2, 0.2, 0.2, 0.2, 0.2]}},
+            {"name": "grade", "source": {"type": "choice", "values": ["A", "B", "C", "D", "F", "A-", "B+"], "weights": [0.2, 0.3, 0.25, 0.15, 0.05, 0.03, 0.02]}},
+            {"name": "event_type", "source": {"type": "choice", "values": ["enrollment", "grade_assigned", "attendance", "assignment_submitted", "exam_taken"], "weights": [0.2, 0.2, 0.3, 0.2, 0.1]}}
+          ]
+        }
+      }
     - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
   `,
   Retail: `
-    - **Entities**: Include 'customer', 'product', and 'store' as separate entities. 'customer', 'product', 'store'.
-    - **Events**: 'sale', 'return', 'inventory_movement' (e.g., 'restock', 'shrinkage').
-    - **Outputs**: Sales events need 'line_item_price' and 'quantity'.
+    - **Entities**: Include 'customer', 'product', and 'store' as separate entities. Customers have 'customer_id', 'name', 'loyalty_tier', 'region'. Products have 'product_id', 'product_name', 'category', 'brand', 'price'. Stores have 'store_id', 'name', 'location', 'region'.
+    - **Events**: Model retail customer journey. Generate events like 'browse', 'add_to_cart', 'purchase', 'return', 'review'.
+    - **Outputs**: Each event should include relevant retail metrics like 'quantity', 'total_amount', 'discount_amount', 'loyalty_points_earned'.
+    - **CRITICAL - All fields must be realistic retail values, NOT random strings:**
+      - 'product_name': realistic names like "Nike Air Max Running Shoes", "Samsung 4K Smart TV", "Starbucks Coffee Beans", "Levi's 501 Jeans"
+      - 'category': realistic categories like "Footwear", "Electronics", "Food & Beverage", "Apparel", "Home & Garden"
+      - 'brand': realistic brands like "Nike", "Samsung", "Starbucks", "Levi's", "Apple", "Coca-Cola"
+      - 'loyalty_tier': realistic tiers like "Bronze", "Silver", "Gold", "Platinum", "Diamond"
+      - 'region': realistic regions like "North America", "Europe", "Asia Pacific", "Latin America"
+    - **Schema Requirements**: For each entity, include all attributes needed for analytics and joins. Do not omit any key business fields. Every event in the event stream must reference all relevant entities (e.g., every purchase must have a valid customer_id, product_id, store_id, etc.). For each attribute, specify a realistic faker method and value range.
+    - **CRITICAL**: NEVER generate random strings or alphanumeric codes for business fields. Use realistic retail terminology and values that an analyst would expect to see in real retail data.
+    - **EXAMPLE JSON SPEC FORMAT** (use this exact format for realistic values):
+      {
+        "entities": [
+          {
+            "name": "product",
+            "attributes": {
+              "product_id": {"type": "id", "prefix": "prod_"},
+              "product_name": {"type": "choice", "values": ["Nike Air Max Running Shoes", "Samsung 4K Smart TV", "Starbucks Coffee Beans", "Levi's 501 Jeans", "Apple iPhone 15"], "weights": [0.2, 0.2, 0.2, 0.2, 0.2]},
+              "category": {"type": "choice", "values": ["Footwear", "Electronics", "Food & Beverage", "Apparel", "Home & Garden"], "weights": [0.2, 0.25, 0.2, 0.2, 0.15]},
+              "brand": {"type": "choice", "values": ["Nike", "Samsung", "Starbucks", "Levi's", "Apple", "Coca-Cola"], "weights": [0.15, 0.15, 0.15, 0.15, 0.2, 0.2]},
+              "loyalty_tier": {"type": "choice", "values": ["Bronze", "Silver", "Gold", "Platinum", "Diamond"], "weights": [0.4, 0.3, 0.2, 0.08, 0.02]}
+            }
+          }
+        ],
+        "event_stream_table": {
+          "name": "retail_events",
+          "columns": [
+            {"name": "event_type", "source": {"type": "choice", "values": ["browse", "add_to_cart", "purchase", "return", "review"], "weights": [0.4, 0.2, 0.25, 0.1, 0.05]}},
+            {"name": "product_name", "source": {"type": "choice", "values": ["Nike Air Max Running Shoes", "Samsung 4K Smart TV", "Starbucks Coffee Beans", "Levi's 501 Jeans", "Apple iPhone 15"], "weights": [0.2, 0.2, 0.2, 0.2, 0.2]}},
+            {"name": "category", "source": {"type": "choice", "values": ["Footwear", "Electronics", "Food & Beverage", "Apparel", "Home & Garden"], "weights": [0.2, 0.25, 0.2, 0.2, 0.15]}},
+            {"name": "brand", "source": {"type": "choice", "values": ["Nike", "Samsung", "Starbucks", "Levi's", "Apple", "Coca-Cola"], "weights": [0.15, 0.15, 0.15, 0.15, 0.2, 0.2]}}
+          ]
+        }
+      }
     - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
   `,
   Manufacturing: `
-    - **Entities**: Include 'work_order', 'product', and 'machine' as separate entities. 'work_order', 'product'.
-    - **Events**: 'production_run_start', 'production_run_end', 'quality_check'.
-    - **Outputs**: Log 'units_produced', 'units_failed', 'material_cost', and 'machine_downtime_hours'.
+    - **Entities**: Include 'product', 'machine', and 'worker' as separate entities. Products have 'product_id', 'product_name', 'category', 'priority'. Machines have 'machine_id', 'machine_type', 'model', 'location'. Workers have 'worker_id', 'name', 'shift', 'department'.
+    - **Events**: Model manufacturing operations. Generate events like 'production_start', 'quality_check', 'maintenance', 'inventory_update', 'defect_found'.
+    - **Outputs**: Each event should include relevant manufacturing metrics like 'quantity_produced', 'defect_rate', 'downtime_hours', 'efficiency_score'.
+    - **CRITICAL - All fields must be realistic manufacturing values, NOT random strings:**
+      - 'product_name': realistic names like "Automotive Engine Block", "Electronic Circuit Board", "Steel Beam", "Plastic Injection Mold"
+      - 'machine_type': realistic types like "CNC Machine", "Assembly Line", "Welding Station", "Quality Control Station"
+      - 'machine_model': realistic models like "HAAS VF-2", "Fanuc R-2000iC", "ABB IRB 2600", "KUKA KR 1000"
+      - 'priority': realistic priorities like "High", "Medium", "Low", "Critical", "Standard"
+      - 'shift': realistic shifts like "Morning", "Afternoon", "Night", "Overtime"
+    - **Schema Requirements**: For each entity, include all attributes needed for analytics and joins. Do not omit any key business fields. Every event in the event stream must reference all relevant entities (e.g., every production event must have a valid product_id, machine_id, worker_id, etc.). For each attribute, specify a realistic faker method and value range.
+    - **CRITICAL**: NEVER generate random strings or alphanumeric codes for business fields. Use realistic manufacturing terminology and values that an analyst would expect to see in real manufacturing data.
+    - **EXAMPLE JSON SPEC FORMAT** (use this exact format for realistic values):
+      {
+        "entities": [
+          {
+            "name": "product",
+            "attributes": {
+              "product_id": {"type": "id", "prefix": "prod_"},
+              "product_name": {"type": "choice", "values": ["Automotive Engine Block", "Electronic Circuit Board", "Steel Beam", "Plastic Injection Mold", "Aluminum Alloy Sheet"], "weights": [0.2, 0.2, 0.2, 0.2, 0.2]},
+              "machine_type": {"type": "choice", "values": ["CNC Machine", "Assembly Line", "Welding Station", "Quality Control Station", "Packaging Line"], "weights": [0.3, 0.25, 0.2, 0.15, 0.1]},
+              "machine_model": {"type": "choice", "values": ["HAAS VF-2", "Fanuc R-2000iC", "ABB IRB 2600", "KUKA KR 1000", "Yaskawa Motoman"], "weights": [0.2, 0.2, 0.2, 0.2, 0.2]},
+              "priority": {"type": "choice", "values": ["High", "Medium", "Low", "Critical", "Standard"], "weights": [0.2, 0.3, 0.2, 0.1, 0.2]},
+              "shift": {"type": "choice", "values": ["Morning", "Afternoon", "Night", "Overtime"], "weights": [0.4, 0.4, 0.15, 0.05]}
+            }
+          }
+        ],
+        "event_stream_table": {
+          "name": "manufacturing_events",
+          "columns": [
+            {"name": "event_type", "source": {"type": "choice", "values": ["production_start", "quality_check", "maintenance", "inventory_update", "defect_found"], "weights": [0.3, 0.25, 0.2, 0.15, 0.1]}},
+            {"name": "product_name", "source": {"type": "choice", "values": ["Automotive Engine Block", "Electronic Circuit Board", "Steel Beam", "Plastic Injection Mold", "Aluminum Alloy Sheet"], "weights": [0.2, 0.2, 0.2, 0.2, 0.2]}},
+            {"name": "machine_type", "source": {"type": "choice", "values": ["CNC Machine", "Assembly Line", "Welding Station", "Quality Control Station", "Packaging Line"], "weights": [0.3, 0.25, 0.2, 0.15, 0.1]}},
+            {"name": "priority", "source": {"type": "choice", "values": ["High", "Medium", "Low", "Critical", "Standard"], "weights": [0.2, 0.3, 0.2, 0.1, 0.2]}}
+          ]
+        }
+      }
     - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
   `,
   Transportation: `
-    - **Entities**: Include 'trip', 'vehicle', and 'driver' as separate entities. 'trip', 'vehicle', 'driver'.
-    - **Events**: 'trip_start', 'trip_end', 'vehicle_maintenance', 'fueling'.
-    - **Outputs**: For trips, log 'distance', 'duration', and 'fare_amount'. For maintenance/fueling, log 'maintenance_cost' or 'fuel_cost'.
+    - **Entities**: Include 'vehicle', 'driver', and 'route' as separate entities. Vehicles have 'vehicle_id', 'vehicle_type', 'model', 'fuel_type'. Drivers have 'driver_id', 'name', 'license_class', 'experience_years'. Routes have 'route_id', 'origin', 'destination', 'distance'.
+    - **Events**: Model transportation operations. Generate events like 'trip_start', 'fuel_stop', 'maintenance', 'delivery_complete', 'break'.
+    - **Outputs**: Each event should include relevant transportation metrics like 'distance_traveled', 'fuel_consumed', 'delivery_time', 'idle_time'.
+    - **CRITICAL - All fields must be realistic transportation values, NOT random strings:**
+      - 'vehicle_type': realistic types like "Semi-Truck", "Delivery Van", "Passenger Bus", "Motorcycle", "Bicycle"
+      - 'vehicle_model': realistic models like "Freightliner Cascadia", "Ford Transit", "Mercedes Sprinter", "Honda Gold Wing"
+      - 'fuel_type': realistic types like "Diesel", "Gasoline", "Electric", "Hybrid", "CNG"
+      - 'license_class': realistic classes like "Class A", "Class B", "Class C", "Class D", "Motorcycle"
+      - 'route_type': realistic types like "Local Delivery", "Long Haul", "Express", "Scheduled", "On-Demand"
+    - **Schema Requirements**: For each entity, include all attributes needed for analytics and joins. Do not omit any key business fields. Every event in the event stream must reference all relevant entities (e.g., every trip must have a valid vehicle_id, driver_id, route_id, etc.). For each attribute, specify a realistic faker method and value range.
+    - **CRITICAL**: NEVER generate random strings or alphanumeric codes for business fields. Use realistic transportation terminology and values that an analyst would expect to see in real transportation data.
+    - **EXAMPLE JSON SPEC FORMAT** (use this exact format for realistic values):
+      {
+        "entities": [
+          {
+            "name": "vehicle",
+            "attributes": {
+              "vehicle_id": {"type": "id", "prefix": "veh_"},
+              "vehicle_type": {"type": "choice", "values": ["Semi-Truck", "Delivery Van", "Passenger Bus", "Motorcycle", "Bicycle"], "weights": [0.3, 0.3, 0.2, 0.15, 0.05]},
+              "vehicle_model": {"type": "choice", "values": ["Freightliner Cascadia", "Ford Transit", "Mercedes Sprinter", "Honda Gold Wing", "Trek Domane"], "weights": [0.25, 0.25, 0.2, 0.2, 0.1]},
+              "fuel_type": {"type": "choice", "values": ["Diesel", "Gasoline", "Electric", "Hybrid", "CNG"], "weights": [0.4, 0.3, 0.15, 0.1, 0.05]},
+              "license_class": {"type": "choice", "values": ["Class A", "Class B", "Class C", "Class D", "Motorcycle"], "weights": [0.3, 0.25, 0.2, 0.2, 0.05]},
+              "route_type": {"type": "choice", "values": ["Local Delivery", "Long Haul", "Express", "Scheduled", "On-Demand"], "weights": [0.4, 0.2, 0.2, 0.15, 0.05]}
+            }
+          }
+        ],
+        "event_stream_table": {
+          "name": "transportation_events",
+          "columns": [
+            {"name": "event_type", "source": {"type": "choice", "values": ["trip_start", "fuel_stop", "maintenance", "delivery_complete", "break"], "weights": [0.25, 0.2, 0.15, 0.25, 0.15]}},
+            {"name": "vehicle_type", "source": {"type": "choice", "values": ["Semi-Truck", "Delivery Van", "Passenger Bus", "Motorcycle", "Bicycle"], "weights": [0.3, 0.3, 0.2, 0.15, 0.05]}},
+            {"name": "fuel_type", "source": {"type": "choice", "values": ["Diesel", "Gasoline", "Electric", "Hybrid", "CNG"], "weights": [0.4, 0.3, 0.15, 0.1, 0.05]}},
+            {"name": "route_type", "source": {"type": "choice", "values": ["Local Delivery", "Long Haul", "Express", "Scheduled", "On-Demand"], "weights": [0.4, 0.2, 0.2, 0.15, 0.05]}}
+          ]
+        }
+      }
     - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
   `,
 };
@@ -411,162 +680,66 @@ export function generateSpecPrompt(params: GenerateSpecPromptParams) {
 
   return `You are a data architect designing a hyper-realistic dataset specification for a '${businessType}' business.
 Your output MUST be a JSON object that defines a blueprint for a data generation script.
-The script will use your specification to generate a large number of events that simulate real-world user behavior over time.
 
-- Business Type Context: ${businessType}
+**CRITICAL: Use correct faker method names:**
+- For names: use "person.fullName" (not "person.name")
+- For emails: use "internet.email" (not "email") 
+- For product names: use "commerce.productName" (not "commerce.product_name")
+- For prices: use "commerce.price" (not "commerce.price")
+- For categories: use "commerce.department" (not "commerce.category")
+- For numbers: use "number.int" (not "random.number")
+
 ${selectedInstructions}
+
+**Schema Requirements:**
+- For OBT: Generate a single table with all columns flattened
+- For Star Schema: Include a "Star" property in your JSON with fact table name and dimension table names
 ${schemaSection}${rulesSection}
 
-- Time Range: ${timeRange}
-- Growth Pattern: ${growthPattern} (e.g., more signups at the start for 'spike')
-- Data Variation: ${variationLevel}
-- Granularity: ${granularity}
-${
-  schemaType === "Star Schema"
-    ? `- Schema Hint: The user prefers a Star Schema. Design the entities to be clean and distinct, representing potential dimension tables. The final output will still be one big table, but the design should reflect this preference.
-
-CRITICAL REQUIREMENT: When schemaType is 'Star Schema', your output JSON MUST include a 'Star' property at the root level, with a 'fact' table and one or more 'dimensions' arrays, e.g.:
-
-"Star": {
-  "fact": "fact_table_name",
-  "dimensions": ["dim1 (col1, col2, ...)", "dim2 (col1, col2, ...)"]
-}
-`
-    : ""
-}
-${context ? `\n- Additional User Context: ${context}` : ""}
-
-Based on these parameters, design the 'simulation' part of the spec. For example, a 'spike' growth pattern should lead to a higher concentration of 'signup' events at the beginning of the time range. A 'steady' pattern should have them spread out evenly.
-
-CRITICAL REQUIREMENT: Your output must be ONLY the JSON object. Do not include any markdown, explanations, or other text.
-
-The JSON object must have exactly three root keys: "entities", "event_stream_table", and "simulation". If schemaType is 'Star Schema', it must also include a fourth root key: "Star".
-
-REQUIRED STRUCTURE:
-1. **entities**: An array of objects, where each object represents a core actor in the simulation (e.g., 'user', 'product').
-    - REQUIRED: 'name': The singular name of the entity (e.g., "user").
-    - REQUIRED: 'attributes': An object defining the entity's properties.
-        - Each attribute must have a 'type' (e.g., 'id', 'faker', 'choice', 'date', 'number').
-        - Provide necessary parameters for each type (e.g., 'prefix' for 'id', 'method' for 'faker', 'values' and 'weights' for 'choice').
-        - For conditional values, use 'key=value' pairs joined with '&' (e.g., "plan=Pro & billing_cycle=monthly": 29.99).
-
-2. **event_stream_table**: An object defining the final output table where simulated events will be stored. Your goal is to create a denormalized "One Big Table" (OBT) suitable for analytics.
-    - REQUIRED: 'name': The name of the output table (e.g., "saas_events").
-    - REQUIRED: 'columns': An array of objects defining the table's columns.
-        - Each column must have 'name' and 'source' properties.
-        - 'source' must define how to populate this column's value.
-
-3. **simulation**: An object defining the logic for how events are generated over a time period.
-    - REQUIRED: 'initial_event': The name of the first event for an entity (e.g., "signup").
-    - REQUIRED: 'events': An object where keys are event names.
-        - Each event MUST define its 'type' ('initial', 'recurring', 'random', 'churn').
-        - Each event MUST include 'outputs' mapping for the event stream table columns.
-        - For 'recurring' events: include 'frequency'.
-        - For 'random' events: include 'avg_per_entity_per_month'.
-        - For 'churn' events: include 'monthly_rate'.
-
-4. **Star** (if schemaType is 'Star Schema'): An object with 'fact' and 'dimensions' keys, e.g.:
-    - 'fact': The name of the fact table.
-    - 'dimensions': An array of dimension table definitions.
-
-Example structure for a SaaS business:
-
+**Output Format:**
+Your response must be valid JSON with this structure:
 {
   "entities": [
     {
-      "name": "user",
+      "name": "entity_name",
       "attributes": {
-        "user_id": { "type": "id", "prefix": "usr_" },
-        "country": {
-          "type": "choice",
-          "values": ["US", "UK", "India", "Other"],
-          "weights": [0.5, 0.2, 0.15, 0.15]
-        },
-        "marketing_channel": { "type": "choice", "values": ["organic", "paid_search", "social", "referral"], "weights": [0.4, 0.3, 0.2, 0.1] },
-        "plan": {
-          "type": "choice",
-          "values": ["Free", "Trial", "Basic", "Pro", "Enterprise"],
-          "weights": [0.2, 0.1, 0.4, 0.2, 0.1]
-        },
-        "billing_cycle": { "type": "choice", "values": ["monthly", "annual"], "weights": [0.7, 0.3] },
-        "price": {
-          "type": "conditional",
-          "on": ["plan", "billing_cycle"],
-          "cases": {
-            "plan=Free": 0,
-            "plan=Trial": 0,
-            "plan=Basic & billing_cycle=monthly": 9.99,
-            "plan=Basic & billing_cycle=annual": 99.99,
-            "plan=Pro & billing_cycle=monthly": 29.99,
-            "plan=Pro & billing_cycle=annual": 299.99,
-            "plan=Enterprise & billing_cycle=monthly": 99.99,
-            "plan=Enterprise & billing_cycle=annual": 999.99
-          }
+        "attribute_name": {
+          "type": "faker|choice|conditional|id",
+          "method": "namespace.method" // for faker type
         }
       }
     }
   ],
   "event_stream_table": {
-    "name": "saas_events",
+    "name": "table_name",
     "columns": [
-      { "name": "event_id", "source": { "type": "id", "prefix": "evt_" } },
-      { "name": "timestamp", "source": { "type": "timestamp" } },
-      { "name": "user_id", "source": { "type": "reference", "entity": "user", "attribute": "user_id" } },
-      { "name": "event_name", "source": { "type": "event_name" } },
-      { "name": "plan", "source": { "type": "reference", "entity": "user", "attribute": "plan" } },
-      { "name": "billing_cycle", "source": { "type": "reference", "entity": "user", "attribute": "billing_cycle" } },
-      { "name": "country", "source": { "type": "reference", "entity": "user", "attribute": "country" } },
-      { "name": "marketing_channel", "source": { "type": "reference", "entity": "user", "attribute": "marketing_channel" } },
-      { "name": "payment_amount", "source": { "type": "lookup", "from": "event_specific_outputs" } }
+      {
+        "name": "column_name",
+        "source": {
+          "type": "id|timestamp|reference|event_name|lookup|literal",
+          "entity": "entity_name", // for reference type
+          "attribute": "attribute_name" // for reference type
+        }
+      }
     ]
   },
   "simulation": {
-    "initial_event": "signup",
+    "initial_event": "event_name",
     "events": {
-      "signup": {
-        "type": "initial",
+      "event_name": {
+        "type": "recurring|random|churn",
+        "frequency": { "on": "entity.attribute" }, // for recurring
+        "avg_per_entity_per_month": 5, // for random
+        "monthly_rate": 0.05, // for churn
         "outputs": {
-          "payment_amount": { "type": "reference", "entity": "user", "attribute": "price" }
-        }
-      },
-      "renewal": {
-        "type": "recurring",
-        "frequency": { "type": "lookup", "on": "user.billing_cycle" },
-        "outputs": {
-          "payment_amount": { "type": "reference", "entity": "user", "attribute": "price" }
-        }
-      },
-      "api_call": {
-        "type": "random",
-        "avg_per_entity_per_month": 20,
-        "outputs": {
-          "payment_amount": { "type": "literal", "value": 0 }
-        }
-      },
-      "cancellation": {
-        "type": "churn",
-        "monthly_rate": 0.08,
-        "outputs": {
-          "payment_amount": { "type": "literal", "value": 0 }
-        }
-      },
-      "failed_renewal": {
-        "type": "random",
-        "avg_per_entity_per_month": 0.02,
-        "outputs": {
-          "payment_amount": { "type": "literal", "value": 0 }
+          "column_name": {
+            "type": "reference|literal",
+            "attribute": "entity_attribute", // for reference
+            "value": "static_value" // for literal
+          }
         }
       }
     }
-  },
-  "Star": {
-    "fact": "subscriptions_fact",
-    "dimensions": [
-      "users_dim (user_id, signup_date, country, marketing_channel)",
-      "plans_dim (plan_id, name, billing_cycle, price)",
-      "events_dim (event_id, event_type, event_date, payment_amount)"
-    ]
   }
-}
-`;
+}`;
 }
