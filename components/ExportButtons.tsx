@@ -1,6 +1,7 @@
 import React from "react";
 import toast, { Toaster } from "react-hot-toast";
 import JSZip from "jszip";
+import { DataFactory } from "@/lib/data-factory";
 
 export default function ExportButtons({
   data,
@@ -13,6 +14,66 @@ export default function ExportButtons({
   stopMetabase,
 }: any) {
   const handleExport = async (type: "csv" | "sql") => {
+    if (data && data.tables && data.spec && prompt) {
+      // Use the spec from preview data
+      const spec = data.spec;
+      const rowCount = prompt.rowCount || 100;
+      const factory = new DataFactory(spec);
+      const generated = factory.generate(
+        rowCount,
+        prompt.timeRange,
+        prompt.schemaType === "star" ? "Star Schema" : "OBT"
+      );
+      let content = "";
+      if (prompt.schemaType === "star") {
+        content = generated.tables
+          .map((table) => toCSV(table.rows, table.name))
+          .join("\n\n");
+      } else {
+        content = toCSV(generated.tables[0].rows, generated.tables[0].name);
+      }
+      const toastId = toast.loading(
+        <span className="text-sm">
+          ⌛ Generating {type.toUpperCase()} file... This can take a few minutes
+        </span>,
+        { duration: Infinity, icon: null }
+      );
+      try {
+        let content = "";
+        if (prompt.schemaType === "star") {
+          // Star schema: export all tables with _fact/_dim suffix (SQL only)
+          content = generated.tables
+            .map((table) => toSQL(table.rows, table.name))
+            .join("\n\n");
+        } else {
+          // OBT: single table
+          content = toCSV(generated.tables[0].rows, generated.tables[0].name);
+        }
+        const blob = new Blob([content], {
+          type: type === "csv" ? "text/csv" : "text/plain",
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `dataset.${type}`;
+        a.click();
+        toast.dismiss(toastId);
+        toast.success(
+          <span className="text-sm">✅ {type.toUpperCase()} downloaded!</span>,
+          { icon: null }
+        );
+      } catch (err) {
+        toast.dismiss(toastId);
+        toast.error(
+          <span className="text-sm">
+            ❌ Failed to generate {type.toUpperCase()}
+          </span>,
+          { icon: null }
+        );
+      }
+      return;
+    }
+    // fallback: call API if data or spec is missing
     const toastId = toast.loading(
       <span className="text-sm">
         ⌛ Generating {type.toUpperCase()} file... This can take a few minutes
@@ -20,10 +81,14 @@ export default function ExportButtons({
       { duration: Infinity, icon: null }
     );
     try {
+      const exportPrompt = {
+        ...prompt,
+        schemaType: prompt.schemaType === "star" ? "Star Schema" : "OBT",
+      };
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(prompt),
+        body: JSON.stringify(exportPrompt),
       });
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();

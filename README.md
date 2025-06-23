@@ -79,8 +79,41 @@ When you click "Start Metabase", it will launch Metabase in a Docker container. 
    - In Metabase, use the "Upload Data" feature to analyze your CSV files
    - Or connect to your own database where you've loaded the data
 
-## Contributing
+## Cost & Data Generation Summary
 
-Pull requests are welcome! If you have ideas, bug fixes, or feature suggestions, feel free to open an issue or submit a PR. All contributions and feedback are appreciated.
+| Action       | Calls OpenAI? | Cost?  | Uses LLM? | Uses Faker? | Row Count |
+| ------------ | :-----------: | :----: | :-------: | :---------: | :-------: |
+| Preview      |      Yes      | ~$0.04 |    Yes    |     Yes     |    10     |
+| Download CSV |      No       |   $0   |    No     |     Yes     |   100+    |
+| Download SQL |      No       |   $0   |    No     |     Yes     |   100+    |
+
+- **You only pay for the preview/spec generation.**
+- **All downloads use the same columns/spec, just with more rows, and are free.**
+
+## How It Works
+
+- When you preview a dataset, the app uses OpenAI to generate a detailed data spec (schema, business rules, event logic) for your chosen business type and parameters.
+- All actual data rows are generated locally using Faker, based on the LLM-generated spec.
+- Downloading or exporting data never calls OpenAI again—it's instant and free.
+
+## Usage Flow
+
+1. Select your business type, schema, and other parameters.
+2. Click "Preview Data" to generate a 10-row sample (incurs a small OpenAI cost).
+3. Download CSV/SQL for as many rows as you want—no extra cost, always uses the same schema/columns as the preview.
+
+## Schema Options
+
+- **One Big Table (OBT):** A single, denormalized table with all relevant columns.
+- **Star Schema:** Multiple tables (fact + dimension) for more advanced analytics. The LLM spec guides the structure, and the generator outputs all tables locally.
+
+## Cost Transparency
+
+See the cost summary above. You only pay for the preview/spec generation. All downloads use the same columns/spec, just with more rows, and are free.
+
+## Extending/Contributing
+
+- To add new business types, rules, or schema logic, edit `lib/spec-prompts.ts` and `lib/data-factory.ts`.
+- Pull requests and suggestions are welcome!
 
 MIT License
