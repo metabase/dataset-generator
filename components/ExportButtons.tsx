@@ -18,6 +18,8 @@ export default function ExportButtons({
       // Use the spec from preview data
       const spec = data.spec;
       const rowCount = prompt.rowCount || 100;
+      // Debug log for export prompt
+      console.log("[Export] Exporting with prompt:", prompt);
       const factory = new DataFactory(spec);
       const generated = factory.generate(
         rowCount,
@@ -26,11 +28,22 @@ export default function ExportButtons({
       );
       let content = "";
       if (prompt.schemaType === "star") {
-        content = generated.tables
-          .map((table) => toCSV(table.rows, table.name))
-          .join("\n\n");
+        if (type === "sql") {
+          // Star schema: export all tables with _fact/_dim suffix (SQL only)
+          content = generated.tables
+            .map((table) => toSQL(table.rows, table.name))
+            .join("\n\n");
+        } else {
+          content = generated.tables
+            .map((table) => toCSV(table.rows, table.name))
+            .join("\n\n");
+        }
       } else {
-        content = toCSV(generated.tables[0].rows, generated.tables[0].name);
+        if (type === "sql") {
+          content = toSQL(generated.tables[0].rows, generated.tables[0].name);
+        } else {
+          content = toCSV(generated.tables[0].rows, generated.tables[0].name);
+        }
       }
       const toastId = toast.loading(
         <span className="text-sm">
@@ -39,23 +52,14 @@ export default function ExportButtons({
         { duration: Infinity, icon: null }
       );
       try {
-        let content = "";
-        if (prompt.schemaType === "star") {
-          // Star schema: export all tables with _fact/_dim suffix (SQL only)
-          content = generated.tables
-            .map((table) => toSQL(table.rows, table.name))
-            .join("\n\n");
-        } else {
-          // OBT: single table
-          content = toCSV(generated.tables[0].rows, generated.tables[0].name);
-        }
         const blob = new Blob([content], {
           type: type === "csv" ? "text/csv" : "text/plain",
         });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `dataset.${type}`;
+        const businessType = (prompt.businessType || "dataset").toLowerCase();
+        a.download = `${businessType}_dataset.${type}`;
         a.click();
         toast.dismiss(toastId);
         toast.success(
@@ -107,7 +111,8 @@ export default function ExportButtons({
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `dataset.zip`;
+        const businessType = (prompt.businessType || "dataset").toLowerCase();
+        a.download = `${businessType}_dataset.zip`;
         a.click();
         toast.dismiss(toastId);
         toast.success(<span className="text-sm">✅ ZIP downloaded!</span>, {
@@ -117,25 +122,30 @@ export default function ExportButtons({
       }
       let content = "";
       if (prompt.schemaType === "star") {
-        // Star schema: export all tables with _fact/_dim suffix (SQL only)
-        content = result.data.tables
-          .map((table: any) => {
-            const tableName = table.name || "table";
-            let suffix = "";
-            if (table.type === "fact") suffix = "_fact";
-            else if (table.type === "dim") suffix = "_dim";
-            return toSQL(table.rows, tableName + suffix);
-          })
-          .join("\n\n");
+        if (type === "sql") {
+          // Star schema: export all tables with _fact/_dim suffix (SQL only)
+          content = result.data.tables
+            .map((table: any) => {
+              const tableName = table.name || "table";
+              let suffix = "";
+              if (table.type === "fact") suffix = "_fact";
+              else if (table.type === "dim") suffix = "_dim";
+              return toSQL(table.rows, tableName + suffix);
+            })
+            .join("\n\n");
+        } else {
+          content = result.data.tables
+            .map((table: any) => toCSV(table.rows, table.name))
+            .join("\n\n");
+        }
       } else {
-        // OBT: single table
-        if (type === "csv")
-          content = toCSV(
+        if (type === "sql")
+          content = toSQL(
             result.data.tables[0].rows,
             result.data.tables[0].name
           );
         else
-          content = toSQL(
+          content = toCSV(
             result.data.tables[0].rows,
             result.data.tables[0].name
           );
@@ -146,7 +156,8 @@ export default function ExportButtons({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `dataset.${type}`;
+      const businessType = (prompt.businessType || "dataset").toLowerCase();
+      a.download = `${businessType}_dataset.${type}`;
       a.click();
       toast.dismiss(toastId);
       toast.success(
