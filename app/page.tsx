@@ -64,6 +64,7 @@ export default function Home() {
 
   useEffect(() => {
     setData(null);
+    setHasPreviewed(false);
   }, [
     prompt.schemaType,
     prompt.businessType,
