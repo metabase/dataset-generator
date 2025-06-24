@@ -1,3 +1,24 @@
+// Suppress faker deprecation warnings from LLM-generated specs
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  if (
+    args[0] &&
+    typeof args[0] === "string" &&
+    args[0].includes("faker.") &&
+    args[0].includes("is deprecated")
+  ) {
+    // Log once that we're using deprecated methods from LLM specs
+    if (!(console as any)._deprecationLogged) {
+      console.log(
+        "[DataFactory] Note: Using some deprecated faker methods from LLM-generated specs. This is expected and safe."
+      );
+      (console as any)._deprecationLogged = true;
+    }
+    return; // Suppress the actual deprecation warning
+  }
+  originalWarn.apply(console, args);
+};
+
 import { faker } from "@faker-js/faker";
 
 // Set a consistent seed for reproducibility
