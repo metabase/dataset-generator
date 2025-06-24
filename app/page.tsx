@@ -31,24 +31,26 @@ export default function Home() {
   const [prompt, setPrompt] = useState<Prompt>({
     rowCount: 100,
     schemaType: "OBT",
-    businessType: "SaaS",
+    businessType: "B2B SaaS",
     timeRange: ["2025"],
     growthPattern: "steady",
     variationLevel: "medium",
     granularity: "daily",
     context: "",
   });
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<any>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isInstallingMetabase, setIsInstallingMetabase] = useState(false);
   const [isMetabaseRunning, setIsMetabaseRunning] = useState(false);
   const [showContext, setShowContext] = useState(false);
+  const [hasPreviewed, setHasPreviewed] = useState(false);
 
   // Dropdown options
-  const rowCountOptions = [100, 250, 500, 1000, 5000];
+  const rowCountOptions = [100, 250, 500, 1000, 5000, 10000];
   const businessTypeOptions = [
-    "SaaS",
+    "B2B SaaS",
+    "B2C SaaS",
     "Ecommerce",
     "Healthcare",
     "Fintech",
@@ -87,6 +89,7 @@ export default function Home() {
   };
 
   const handlePreview = async () => {
+    setHasPreviewed(true);
     setLoading(true);
     setError("");
     setData(null);
@@ -256,7 +259,6 @@ export default function Home() {
         </span>,
         { duration: Infinity, icon: null }
       );
-      console.error("Error starting Metabase:", error);
     }
   }
 
@@ -297,7 +299,6 @@ export default function Home() {
         </span>,
         { duration: Infinity, icon: null }
       );
-      console.error("Error stopping Metabase:", error);
     }
   }
 
@@ -547,21 +548,30 @@ export default function Home() {
               </div>
             </div>
           )}
-          {!loading && data && data.tables && data.tables[0]?.rows && (
-            <div className="space-y-4">
-              <DataTable data={data} />
-              <ExportButtons
-                data={data}
-                prompt={prompt}
-                toCSV={toCSV}
-                toSQL={toSQL}
-                isMetabaseRunning={isMetabaseRunning}
-                isInstallingMetabase={isInstallingMetabase}
-                startMetabase={startMetabase}
-                stopMetabase={stopMetabase}
-              />
-            </div>
-          )}
+          {!loading &&
+            data &&
+            Array.isArray(data.tables) &&
+            data.tables.length > 0 && (
+              <div className="space-y-4">
+                <DataTable data={data} />
+                <ExportButtons
+                  data={data}
+                  prompt={prompt}
+                  toCSV={toCSV}
+                  toSQL={toSQL}
+                  isMetabaseRunning={isMetabaseRunning}
+                  isInstallingMetabase={isInstallingMetabase}
+                  startMetabase={startMetabase}
+                  stopMetabase={stopMetabase}
+                />
+              </div>
+            )}
+          {/* Only show 'No data' if user has previewed and there is no data */}
+          {!loading &&
+          hasPreviewed &&
+          (!data || !data.tables || data.tables.length === 0) ? (
+            <div className="text-gray-400">No data</div>
+          ) : null}
         </section>
       </div>
     </div>
