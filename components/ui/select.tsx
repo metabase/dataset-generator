@@ -209,7 +209,7 @@ export function MultiSelect({
         {value.length === 0 ? placeholder : value.join(", ")}
       </button>
       {open && (
-        <div className="absolute z-50 mt-2 w-40 bg-zinc-800 text-white rounded shadow-lg border border-zinc-700 p-2">
+        <div className="absolute z-50 mt-2 w-40 bg-zinc-800 text-white rounded-md shadow-md border border-white p-1 text-sm font-medium">
           {options.map((opt) => (
             <label
               key={opt}
