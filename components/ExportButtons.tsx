@@ -14,37 +14,17 @@ export default function ExportButtons({
   stopMetabase,
 }: any) {
   const handleExport = async (type: "csv" | "sql") => {
-    if (data && data.tables && data.spec && prompt) {
-      // Use the spec from preview data
+    if (data && data.spec && prompt) {
+      // Always use the in-memory spec to generate the full dataset
       const spec = data.spec;
       const rowCount = prompt.rowCount || 100;
-      // Debug log for export prompt
-      console.log("[Export] Exporting with prompt:", prompt);
       const factory = new DataFactory(spec);
       const generated = factory.generate(
         rowCount,
         prompt.timeRange,
         prompt.schemaType === "star" ? "Star Schema" : "OBT"
       );
-      let content = "";
-      if (prompt.schemaType === "star") {
-        if (type === "sql") {
-          // Star schema: export all tables with _fact/_dim suffix (SQL only)
-          content = generated.tables
-            .map((table) => toSQL(table.rows, table.name))
-            .join("\n\n");
-        } else {
-          content = generated.tables
-            .map((table) => toCSV(table.rows, table.name))
-            .join("\n\n");
-        }
-      } else {
-        if (type === "sql") {
-          content = toSQL(generated.tables[0].rows, generated.tables[0].name);
-        } else {
-          content = toCSV(generated.tables[0].rows, generated.tables[0].name);
-        }
-      }
+      const allTables = generated.tables || [];
       const toastId = toast.loading(
         <span className="text-sm">
           ⌛ Generating {type.toUpperCase()} file... This can take a few minutes
@@ -52,20 +32,62 @@ export default function ExportButtons({
         { duration: Infinity, icon: null }
       );
       try {
-        const blob = new Blob([content], {
-          type: type === "csv" ? "text/csv" : "text/plain",
-        });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        const businessType = (prompt.businessType || "dataset").toLowerCase();
-        a.download = `${businessType}_dataset.${type}`;
-        a.click();
-        toast.dismiss(toastId);
-        toast.success(
-          <span className="text-sm">✅ {type.toUpperCase()} downloaded!</span>,
-          { icon: null }
-        );
+        if (prompt.schemaType === "star" && type === "csv") {
+          // Use JSZip to zip multiple CSVs
+          const zip = new JSZip();
+          allTables.forEach((table) => {
+            const csv = toCSV(table.rows, table.name);
+            zip.file(`${table.name}.csv`, csv);
+          });
+          const content = await zip.generateAsync({ type: "blob" });
+          const url = window.URL.createObjectURL(content);
+          const a = document.createElement("a");
+          const businessType = (prompt.businessType || "dataset").toLowerCase();
+          a.href = url;
+          a.download = `${businessType}_dataset.zip`;
+          a.click();
+          toast.dismiss(toastId);
+          toast.success(
+            <span className="text-sm">✅ CSVs downloaded as ZIP!</span>,
+            { icon: null }
+          );
+        } else {
+          let content = "";
+          if (prompt.schemaType === "star") {
+            if (type === "sql") {
+              content = allTables
+                .map((table) => toSQL(table.rows, table.name))
+                .join("\n\n");
+            } else {
+              content = allTables
+                .map((table) => toCSV(table.rows, table.name))
+                .join("\n\n");
+            }
+          } else {
+            const table = allTables[0];
+            if (type === "sql") {
+              content = toSQL(table.rows, table.name);
+            } else {
+              content = toCSV(table.rows, table.name);
+            }
+          }
+          const blob = new Blob([content], {
+            type: type === "csv" ? "text/csv" : "text/plain",
+          });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          const businessType = (prompt.businessType || "dataset").toLowerCase();
+          a.download = `${businessType}_dataset.${type}`;
+          a.click();
+          toast.dismiss(toastId);
+          toast.success(
+            <span className="text-sm">
+              ✅ {type.toUpperCase()} downloaded!
+            </span>,
+            { icon: null }
+          );
+        }
       } catch (err) {
         toast.dismiss(toastId);
         toast.error(
@@ -77,102 +99,14 @@ export default function ExportButtons({
       }
       return;
     }
-    // fallback: call API if data or spec is missing
-    const toastId = toast.loading(
+    // If spec is missing, show an error
+    toast.error(
       <span className="text-sm">
-        ⌛ Generating {type.toUpperCase()} file... This can take a few minutes
+        ❌ No data spec available for export. Please preview or generate data
+        first.
       </span>,
-      { duration: Infinity, icon: null }
+      { icon: null }
     );
-    try {
-      const exportPrompt = {
-        ...prompt,
-        schemaType: prompt.schemaType === "star" ? "Star Schema" : "OBT",
-      };
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(exportPrompt),
-      });
-      if (!response.ok) throw new Error("Failed to generate dataset");
-      const result = await response.json();
-      if (prompt.schemaType === "star" && type === "csv") {
-        // Star schema: zip all tables as separate CSVs
-        const zip = new JSZip();
-        result.data.tables.forEach((table: any) => {
-          const tableName = table.name || "table";
-          let suffix = "";
-          if (table.type === "fact") suffix = "_fact";
-          else if (table.type === "dim") suffix = "_dim";
-          const csv = toCSV(table.rows, tableName + suffix);
-          zip.file(`${tableName}${suffix}.csv`, csv);
-        });
-        const blob = await zip.generateAsync({ type: "blob" });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        const businessType = (prompt.businessType || "dataset").toLowerCase();
-        a.download = `${businessType}_dataset.zip`;
-        a.click();
-        toast.dismiss(toastId);
-        toast.success(<span className="text-sm">✅ ZIP downloaded!</span>, {
-          icon: null,
-        });
-        return;
-      }
-      let content = "";
-      if (prompt.schemaType === "star") {
-        if (type === "sql") {
-          // Star schema: export all tables with _fact/_dim suffix (SQL only)
-          content = result.data.tables
-            .map((table: any) => {
-              const tableName = table.name || "table";
-              let suffix = "";
-              if (table.type === "fact") suffix = "_fact";
-              else if (table.type === "dim") suffix = "_dim";
-              return toSQL(table.rows, tableName + suffix);
-            })
-            .join("\n\n");
-        } else {
-          content = result.data.tables
-            .map((table: any) => toCSV(table.rows, table.name))
-            .join("\n\n");
-        }
-      } else {
-        if (type === "sql")
-          content = toSQL(
-            result.data.tables[0].rows,
-            result.data.tables[0].name
-          );
-        else
-          content = toCSV(
-            result.data.tables[0].rows,
-            result.data.tables[0].name
-          );
-      }
-      const blob = new Blob([content], {
-        type: type === "csv" ? "text/csv" : "text/plain",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      const businessType = (prompt.businessType || "dataset").toLowerCase();
-      a.download = `${businessType}_dataset.${type}`;
-      a.click();
-      toast.dismiss(toastId);
-      toast.success(
-        <span className="text-sm">✅ {type.toUpperCase()} downloaded!</span>,
-        { icon: null }
-      );
-    } catch (err) {
-      toast.dismiss(toastId);
-      toast.error(
-        <span className="text-sm">
-          ❌ Failed to generate {type.toUpperCase()}
-        </span>,
-        { icon: null }
-      );
-    }
   };
 
   return (
@@ -200,12 +134,7 @@ export default function ExportButtons({
       ) : (
         <button
           onClick={startMetabase}
-          disabled={
-            isInstallingMetabase ||
-            !data ||
-            !data.tables ||
-            !data.tables[0]?.rows?.length
-          }
+          disabled={isInstallingMetabase}
           className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
         >
           {isInstallingMetabase ? "Installing..." : "Explore in Metabase"}
