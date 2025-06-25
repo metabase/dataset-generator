@@ -202,15 +202,15 @@ export class DataFactory {
     });
 
     if (process.env.DEBUG) {
-      console.log("[DataFactory] Spec validation passed");
+      // console.log("[DataFactory] Spec validation passed");
     }
   }
 
   public generate(rowCount: number, timeRange: string[], schemaType?: string) {
     if (process.env.DEBUG) {
-      console.log(
-        `[DataFactory] Generating ${rowCount} rows for time range: ${timeRange}`
-      );
+      // console.log(
+      //   `[DataFactory] Generating ${rowCount} rows for time range: ${timeRange}`
+      // );
     }
 
     // Generate entities
@@ -267,8 +267,6 @@ export class DataFactory {
       generatedEntities[entitySpec.name] = entities;
     });
 
-    // Remove or comment out noisy logs in generateEntities
-    // Comment out: console.log("Generated entities:", generatedEntities);
     return generatedEntities;
   }
 
