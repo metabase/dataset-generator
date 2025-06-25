@@ -7,8 +7,7 @@ export function toCSV(rows: any[], tableName?: string) {
       columns.map((col) => JSON.stringify(row[col] ?? "")).join(",")
     )
     .join("\n");
-  // Optionally add table name as a comment for star schema
-  return (tableName ? `# ${tableName}\n` : "") + header + "\n" + body;
+  return header + "\n" + body;
 }
 
 export function toSQL(rows: any[], tableName = "dataset") {
