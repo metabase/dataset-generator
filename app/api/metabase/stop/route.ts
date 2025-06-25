@@ -31,12 +31,12 @@ export async function POST() {
           await execAsync(`docker rmi ${image}`);
         } catch (e) {
           // Ignore errors if image is in use or doesn't exist
-          console.log(`Could not remove image ${image}:`, e);
+          console.error(`Could not remove image ${image}:`, e);
         }
       }
     } catch (e) {
       // If we can't list images, just continue
-      console.log("Could not list images:", e);
+      console.error("Could not list images:", e);
     }
 
     return NextResponse.json({
