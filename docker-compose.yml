@@ -28,19 +28,5 @@ services:
     depends_on:
       - db
 
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: dataset_generator_web
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
-      - SCRAPER_HOST=scraper
-    ports:
-      - "3000:3000"
-
 volumes:
   pgdata:
