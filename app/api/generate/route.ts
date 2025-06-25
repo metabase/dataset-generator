@@ -101,7 +101,32 @@ export async function POST(req: Request) {
     );
 
     // Format the response
-    const response = { ...generatedData, spec };
+    const response = {
+      ...generatedData,
+      spec,
+      cost: {
+        estimated: totalEstimatedCost,
+        inputTokens: promptLengthInTokens,
+        outputTokens: estimatedOutputTokens,
+        actualTokens: completion.usage?.total_tokens || totalEstimatedTokens,
+        actualCost: completion.usage
+          ? (completion.usage.prompt_tokens / 1000) * 0.005 +
+            (completion.usage.completion_tokens / 1000) * 0.015
+          : totalEstimatedCost,
+      },
+    };
+
+    // Log cost for transparency
+    const actualCost = completion.usage
+      ? (completion.usage.prompt_tokens / 1000) * 0.005 +
+        (completion.usage.completion_tokens / 1000) * 0.015
+      : totalEstimatedCost;
+
+    console.log(
+      `[Dataset Generation] Business: ${businessType}, Rows: ${rowCount}, Cost: $${actualCost.toFixed(
+        4
+      )}, Tokens: ${completion.usage?.total_tokens || "estimated"}`
+    );
 
     return NextResponse.json({ data: response });
   } catch (error) {
