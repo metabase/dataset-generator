@@ -1,357 +1,283 @@
 // Add an index signature to allow string indexing
-type EnhancedSchema = {
-  OBT: string[];
-  Star: {
-    fact: string;
-    dimensions: string[];
-  };
-  metrics: string[];
-};
 
 const businessTypeInstructions: Record<string, string> = {
-  SaaS: `
-    - **Entities**: Include 'user', 'plan', and 'marketing_channel' as separate entities. Users have attributes like 'plan' (linked to the plan entity), 'billing_cycle', and 'country'. Plans have 'plan_id', 'name', 'billing_cycle', and 'price'. Marketing channels have 'channel_id' and 'name'.
-    - **Events**: Simulate a user lifecycle. Start with a 'signup' event (the initial event). Schedule recurring 'renewal' events based on their billing cycle. Generate random 'api_call' or 'feature_usage' events to represent product engagement. Model 'cancellation' events using a monthly churn rate. Add a 'failed_renewal' event with a small probability (e.g., 2% of renewals). Some users should have only a signup event (silent churn).
-    - **Outputs**: For 'signup' and 'renewal' events: if the user's plan is 'Free' or 'Trial', set 'payment_amount' to 0 and use only the plan in the conditional key (e.g., "plan=Free": 0). For paid plans, set 'payment_amount' to the user's plan price and use both plan and billing_cycle in the conditional key (e.g., "plan=Basic & billing_cycle=monthly": 10). For other events, it should be 0. For 'failed_renewal', set 'payment_amount' to 0.
-    - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
+  "B2B SaaS": `
+    **CRITICAL: B2B SaaS Business Model Requirements**
+    - **Pricing Structure**: 
+      - Starter: $50-199/month (small teams, 1-10 users)
+      - Professional: $200-999/month (growing companies, 10-100 users)
+      - Enterprise: $1000-5000+/month (large organizations, 100+ users)
+      - Custom: $5000-50000/month (enterprise contracts, unlimited users)
+      - Annual billing: 20-30% discount (e.g., $2400/year instead of $200/month)
+    - **User Lifecycle Events**:
+      - demo_requested: Sales inquiry (avg_per_entity_per_month: 0.01-0.05)
+      - trial_started: Free trial begins (avg_per_entity_per_month: 0.02-0.1)
+      - contract_signed: Enterprise deal closed (avg_per_entity_per_month: 0.005-0.02)
+      - user_invited: Team member added (avg_per_entity_per_month: 0.1-0.5)
+      - login: User authentication (avg_per_entity_per_month: 5-15)
+      - feature_usage: Business feature interaction (avg_per_entity_per_month: 10-50)
+      - api_call: Integration usage (avg_per_entity_per_month: 100-1000)
+      - admin_action: Administrative task (avg_per_entity_per_month: 1-5)
+      - support_ticket: Customer support request (avg_per_entity_per_month: 0.1-0.5)
+      - contract_renewal: Annual renewal (monthly_rate: 0.08 - 8% monthly renewal rate)
+      - churn: Contract cancellation (monthly_rate: 0.01-0.03 - 1-3% monthly churn)
+    - **Required Fields**:
+      - user_id, user_name, user_email, user_role, company_id, company_name
+      - company_size, company_industry, subscription_plan, billing_cycle, plan_price
+      - contract_value, contract_start_date, contract_end_date, seats_purchased
+      - event_type, event_timestamp, session_duration_minutes
+      - api_calls_count, feature_usage_count, admin_actions_count
+      - payment_amount, billing_date, acv (annual contract value), mrr
+    - **Business Logic**:
+      - plan_price must match subscription_plan (Starter=50-199, Pro=200-999, Enterprise=1000+)
+      - contract_value = plan_price * 12 (annual contracts)
+      - acv = contract_value for annual, plan_price * 12 for monthly
+      - mrr = acv / 12
+      - seats_purchased >= 1 (B2B always has multiple users)
+      - user_role: admin, manager, user, viewer
+    - **Analyst-Friendly Context**: Include company demographics, user roles, contract details, and enterprise metrics in every row
+  `,
+  "B2C SaaS": `
+    **CRITICAL: B2C SaaS Business Model Requirements**
+    - **Pricing Structure**: 
+      - Free tier: $0 (freemium model, limited features)
+      - Basic tier: $5-19/month (individual users, core features)
+      - Premium tier: $20-49/month (power users, advanced features)
+      - Family tier: $50-99/month (multiple users, shared features)
+      - Annual billing: 30-50% discount (e.g., $120/year instead of $15/month)
+    - **User Lifecycle Events**:
+      - signup: Initial registration (avg_per_entity_per_month: 0.1-0.5)
+      - trial_started: Free trial begins (avg_per_entity_per_month: 0.05-0.2)
+      - subscription_created: Paid plan starts (avg_per_entity_per_month: 0.02-0.1)
+      - login: User authentication (avg_per_entity_per_month: 20-100)
+      - feature_usage: Feature interaction (avg_per_entity_per_month: 50-200)
+      - content_created: User-generated content (avg_per_entity_per_month: 10-50)
+      - social_share: Social media sharing (avg_per_entity_per_month: 2-10)
+      - referral_sent: Invite friend (avg_per_entity_per_month: 0.5-2)
+      - upgrade: Plan upgrade (avg_per_entity_per_month: 0.02-0.1)
+      - downgrade: Plan downgrade (avg_per_entity_per_month: 0.01-0.05)
+      - cancellation: Subscription ends (monthly_rate: 0.03-0.08 - 3-8% monthly churn)
+    - **Required Fields**:
+      - user_id, user_name, user_email, user_age, user_country, signup_date
+      - subscription_plan, billing_cycle, plan_price, subscription_status
+      - device_type, app_version, marketing_source, referral_code
+      - event_type, event_timestamp, session_duration_minutes
+      - feature_usage_count, content_created_count, social_shares_count
+      - payment_amount, billing_date, mrr, viral_coefficient
+    - **Business Logic**:
+      - plan_price must match subscription_plan (Free=0, Basic=5-19, Premium=20-49, Family=50-99)
+      - subscription_status: active, cancelled, expired, trial
+      - device_type: mobile, desktop, tablet
+      - viral_coefficient = referrals_sent / active_users
+      - session_duration_minutes: 5-60 (personal usage patterns)
+    - **Analyst-Friendly Context**: Include user demographics, device info, usage patterns, and engagement metrics in every row
   `,
   Ecommerce: `
-    - **Entities**: Include 'customer', 'product', and 'order' as separate entities. Products have 'product_id', 'name', 'category', and 'price'. Orders have 'order_id', 'order_date', 'shipping_cost', and 'discount_amount'.
-    - **Events**: The main event sequence is 'view_item', 'add_to_cart', 'start_checkout', and 'purchase'. Also include 'refund' events. Not every sequence will end in a purchase.
-    - **Outputs**: For 'purchase' events, generate an 'order_id'. The final table should include columns like 'quantity', 'item_price', 'shipping_cost', and 'discount_amount'. For other events, these can be null or 0.
-    - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
+    **CRITICAL: Ecommerce Business Model Requirements**
+    - **Product Pricing**:
+      - Electronics: $50-2000 (phones, laptops, accessories)
+      - Clothing: $10-200 (shirts, pants, shoes)
+      - Home & Garden: $20-500 (furniture, tools, decor)
+      - Books: $5-50 (fiction, non-fiction, textbooks)
+      - Food & Beverage: $5-100 (groceries, snacks, drinks)
+    - **Customer Journey Events**:
+      - product_view: Browse product (avg_per_entity_per_month: 20-50)
+      - add_to_cart: Add item to cart (avg_per_entity_per_month: 5-15)
+      - purchase: Complete order (avg_per_entity_per_month: 2-8)
+      - review: Product review (avg_per_entity_per_month: 0.5-2)
+      - return: Return item (monthly_rate: 0.05-0.15)
+    - **Required Fields**:
+      - customer_id, customer_name, customer_email, customer_country
+      - product_id, product_name, product_category, product_price
+      - order_id, order_date, order_status, quantity, unit_price
+      - total_amount, shipping_cost, tax_amount, discount_amount
+      - payment_method, shipping_address, delivery_date
+    - **Business Logic**:
+      - total_amount = (quantity * unit_price) + shipping_cost + tax_amount - discount_amount
+      - order_status: pending, confirmed, shipped, delivered, returned, cancelled
+      - product_price must be realistic for category
+      - shipping_cost: $5-15 for domestic, $20-50 for international
+    - **Analyst-Friendly Context**: Include customer info, product details, order context, and financial calculations in every row
   `,
   Healthcare: `
-    - **Entities**: Include 'patient', 'provider', and 'facility' as separate entities. The main entity is the 'patient'. Other entities could be 'provider' and 'facility'.
-    - **Events**: Generate patient-centric events like 'patient_visit', 'treatment_administered', and 'procedure_performed'. Also include billing events like 'claim_submitted', 'claim_paid', and 'claim_denied'.
-    - **Outputs**: For procedures, include 'cpt_code' and 'procedure_cost'. For billing, include 'claim_id', 'claim_amount', and 'insurance_payout'.
-    - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
+    **CRITICAL: Healthcare Business Model Requirements**
+    - **Medical Procedure Costs**:
+      - Primary Care: $50-200 (checkups, consultations)
+      - Specialist Care: $150-500 (cardiology, neurology, orthopedics)
+      - Surgery: $5000-50000 (minor to major procedures)
+      - Diagnostic Tests: $100-2000 (blood work, imaging, biopsies)
+      - Emergency Care: $500-5000 (urgent care, ER visits)
+    - **Patient Care Events**:
+      - appointment_scheduled: Book appointment (avg_per_entity_per_month: 0.5-2)
+      - appointment_attended: Complete visit (avg_per_entity_per_month: 0.3-1.5)
+      - procedure_performed: Medical procedure (avg_per_entity_per_month: 0.1-0.5)
+      - prescription_filled: Medication dispensed (avg_per_entity_per_month: 0.2-1)
+      - follow_up: Follow-up visit (avg_per_entity_per_month: 0.1-0.3)
+    - **Required Fields**:
+      - patient_id, patient_name, patient_dob, patient_gender, insurance_provider
+      - provider_id, provider_name, provider_specialty, facility_id, facility_name
+      - procedure_code, procedure_name, procedure_cost, claim_amount
+      - appointment_date, admission_date, discharge_date, appointment_status
+      - insurance_payout, patient_responsibility, claim_status
+    - **Business Logic**:
+      - claim_amount >= procedure_cost (typically 10-60% higher)
+      - insurance_payout = 0 if claim_status = 'Denied'
+      - patient_responsibility = claim_amount - insurance_payout
+      - discharge_date > admission_date
+      - appointment_status: scheduled, confirmed, completed, cancelled, no_show
+    - **Analyst-Friendly Context**: Include patient demographics, provider details, clinical context, and financial data in every row
   `,
   Fintech: `
-    - **Entities**: Include 'account', 'currency', and 'transaction' as separate entities. The core entity is 'account'.
-    - **Events**: Model financial transactions. Generate events like 'deposit', 'withdrawal', 'transfer', and 'payment'. Each should have a status ('completed', 'pending', 'failed').
-    - **Outputs**: Each event row must have a 'transaction_id'. Key columns are 'amount', 'fee', and 'currency'. Critically, include a boolean 'is_fraud' flag with a realistic (low) probability of being true.
-    - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
+    **CRITICAL: Fintech Business Model Requirements**
+    - **Transaction Amounts**:
+      - Small transactions: $1-100 (coffee, groceries, gas)
+      - Medium transactions: $100-1000 (electronics, travel, services)
+      - Large transactions: $1000-10000 (furniture, appliances, deposits)
+      - Investment transactions: $1000-100000 (stocks, bonds, crypto)
+    - **Financial Events**:
+      - account_opened: New account creation (avg_per_entity_per_month: 0.05-0.2)
+      - transaction_processed: Financial transaction (avg_per_entity_per_month: 20-100)
+      - payment_sent: Outgoing payment (avg_per_entity_per_month: 5-30)
+      - payment_received: Incoming payment (avg_per_entity_per_month: 3-20)
+      - fraud_alert: Suspicious activity (monthly_rate: 0.001-0.01)
+      - account_closed: Account termination (monthly_rate: 0.01-0.05)
+    - **Required Fields**:
+      - account_id, customer_id, customer_name, account_type, account_status
+      - transaction_id, transaction_type, transaction_amount, currency
+      - transaction_date, transaction_status, merchant_name, merchant_category
+      - balance_before, balance_after, transaction_fee, fraud_score
+      - payment_method, card_type, card_last_four, transaction_location
+    - **Business Logic**:
+      - balance_after = balance_before + transaction_amount - transaction_fee
+      - transaction_status: pending, completed, failed, reversed, flagged
+      - fraud_score: 0-100 (higher = more suspicious)
+      - transaction_fee: 0-5% of transaction_amount
+      - account_status: active, suspended, closed, frozen
+    - **Analyst-Friendly Context**: Include account details, customer info, transaction context, and risk metrics in every row
   `,
   Education: `
-    - **Entities**: Include 'student', 'course', and 'instructor' as separate entities. Key entities are 'student', 'course', and 'instructor'.
-    - **Events**: Track student activities: 'course_enrollment', 'tuition_payment', 'lecture_viewed', 'assignment_submitted', 'grade_received'.
-    - **Outputs**: For payments, distinguish between 'tuition_fee', 'scholarship_amount', and 'net_paid'. Other events can have these as 0.
-    - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
+    **CRITICAL: Education Business Model Requirements**
+    - **Course Pricing**:
+      - Free courses: $0 (basic content, certifications)
+      - Basic courses: $50-200 (skill development, workshops)
+      - Advanced courses: $200-1000 (professional training, bootcamps)
+      - Degree programs: $5000-50000 (bachelor's, master's, certificates)
+    - **Academic Events**:
+      - enrollment: Student enrolls (avg_per_entity_per_month: 0.1-0.5)
+      - course_started: Begin course (avg_per_entity_per_month: 0.05-0.3)
+      - assignment_submitted: Submit work (avg_per_entity_per_month: 2-10)
+      - exam_taken: Take assessment (avg_per_entity_per_month: 0.5-2)
+      - course_completed: Finish course (avg_per_entity_per_month: 0.02-0.2)
+      - graduation: Complete program (avg_per_entity_per_month: 0.01-0.1)
+    - **Required Fields**:
+      - student_id, student_name, student_email, student_dob, enrollment_date
+      - course_id, course_name, course_category, course_price, instructor_id
+      - instructor_name, instructor_specialty, institution_id, institution_name
+      - assignment_id, assignment_name, assignment_score, exam_score
+      - completion_date, graduation_date, gpa, academic_status
+    - **Business Logic**:
+      - assignment_score: 0-100 (realistic distribution)
+      - exam_score: 0-100 (weighted average of assignments)
+      - gpa: 0.0-4.0 (cumulative grade point average)
+      - academic_status: enrolled, active, completed, graduated, dropped
+      - completion_date > enrollment_date
+    - **Analyst-Friendly Context**: Include student demographics, course details, academic performance, and institutional data in every row
   `,
   Retail: `
-    - **Entities**: Include 'customer', 'product', and 'store' as separate entities. 'customer', 'product', 'store'.
-    - **Events**: 'sale', 'return', 'inventory_movement' (e.g., 'restock', 'shrinkage').
-    - **Outputs**: Sales events need 'line_item_price' and 'quantity'.
-    - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
+    **CRITICAL: Retail Business Model Requirements**
+    - **Product Pricing**:
+      - Electronics: $50-2000 (phones, laptops, accessories)
+      - Clothing: $10-200 (shirts, pants, shoes, accessories)
+      - Home & Garden: $20-500 (furniture, tools, decor)
+      - Beauty & Personal Care: $5-100 (cosmetics, skincare, hygiene)
+      - Sports & Outdoors: $20-300 (equipment, apparel, gear)
+    - **Shopping Events**:
+      - store_visit: Physical store visit (avg_per_entity_per_month: 2-8)
+      - product_browsed: Browse product (avg_per_entity_per_month: 10-30)
+      - purchase_made: Buy product (avg_per_entity_per_month: 1-5)
+      - return_processed: Return item (monthly_rate: 0.05-0.15)
+      - loyalty_points_earned: Earn rewards (avg_per_entity_per_month: 0.5-2)
+    - **Required Fields**:
+      - customer_id, customer_name, customer_email, customer_segment
+      - store_id, store_name, store_location, store_type
+      - product_id, product_name, product_category, product_price
+      - transaction_id, transaction_date, quantity, unit_price
+      - total_amount, tax_amount, discount_amount, payment_method
+      - sales_associate_id, loyalty_points, return_reason
+    - **Business Logic**:
+      - total_amount = (quantity * unit_price) + tax_amount - discount_amount
+      - loyalty_points = total_amount * 0.01 (1% back)
+      - product_price must be realistic for category and store type
+      - tax_amount = total_amount * 0.08-0.12 (8-12% sales tax)
+      - return_reason: defective, wrong_size, changed_mind, duplicate
+    - **Analyst-Friendly Context**: Include customer info, store details, product context, and transaction data in every row
   `,
   Manufacturing: `
-    - **Entities**: Include 'work_order', 'product', and 'machine' as separate entities. 'work_order', 'product'.
-    - **Events**: 'production_run_start', 'production_run_end', 'quality_check'.
-    - **Outputs**: Log 'units_produced', 'units_failed', 'material_cost', and 'machine_downtime_hours'.
-    - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
+    **CRITICAL: Manufacturing Business Model Requirements**
+    - **Production Costs**:
+      - Raw materials: $10-1000 per unit (depending on product complexity)
+      - Labor costs: $20-100 per hour (skilled vs unskilled)
+      - Equipment costs: $1000-100000 per machine (maintenance, depreciation)
+      - Quality control: $5-50 per unit (testing, inspection)
+    - **Production Events**:
+      - work_order_created: Start production (avg_per_entity_per_month: 1-5)
+      - production_started: Begin manufacturing (avg_per_entity_per_month: 0.5-3)
+      - quality_check: Quality inspection (avg_per_entity_per_month: 2-10)
+      - maintenance_performed: Equipment maintenance (avg_per_entity_per_month: 0.1-0.5)
+      - product_completed: Finish production (avg_per_entity_per_month: 0.3-2)
+      - defect_found: Quality issue (monthly_rate: 0.01-0.05)
+    - **Required Fields**:
+      - product_id, product_name, product_category, product_specifications
+      - work_order_id, work_order_date, production_line_id, machine_id
+      - machine_name, machine_type, operator_id, operator_name
+      - raw_materials_cost, labor_cost, equipment_cost, total_cost
+      - quality_score, defect_count, production_time_hours, completion_date
+    - **Business Logic**:
+      - total_cost = raw_materials_cost + labor_cost + equipment_cost
+      - quality_score: 0-100 (higher = better quality)
+      - defect_count: 0-10 (lower = better production)
+      - production_time_hours: realistic for product complexity
+      - completion_date > work_order_date
+    - **Analyst-Friendly Context**: Include product details, production metrics, quality data, and cost breakdowns in every row
   `,
   Transportation: `
-    - **Entities**: Include 'trip', 'vehicle', and 'driver' as separate entities. 'trip', 'vehicle', 'driver'.
-    - **Events**: 'trip_start', 'trip_end', 'vehicle_maintenance', 'fueling'.
-    - **Outputs**: For trips, log 'distance', 'duration', and 'fare_amount'. For maintenance/fueling, log 'maintenance_cost' or 'fuel_cost'.
-    - **Note**: Multiple entities and dimension tables are included so users can practice SQL joins.
+    **CRITICAL: Transportation Business Model Requirements**
+    - **Trip Costs**:
+      - Local delivery: $10-50 (same city, small packages)
+      - Regional delivery: $50-200 (same state/province, medium packages)
+      - Long-distance: $200-1000 (cross-country, large shipments)
+      - International: $500-5000 (overseas, express shipping)
+    - **Transportation Events**:
+      - trip_scheduled: Plan delivery (avg_per_entity_per_month: 2-10)
+      - trip_started: Begin journey (avg_per_entity_per_month: 1-8)
+      - delivery_made: Complete delivery (avg_per_entity_per_month: 0.8-6)
+      - maintenance_performed: Vehicle maintenance (avg_per_entity_per_month: 0.1-0.3)
+      - fuel_purchased: Refuel vehicle (avg_per_entity_per_month: 4-12)
+      - accident_reported: Safety incident (monthly_rate: 0.001-0.01)
+    - **Required Fields**:
+      - vehicle_id, vehicle_type, vehicle_model, vehicle_year
+      - driver_id, driver_name, driver_license, driver_rating
+      - trip_id, trip_date, origin_location, destination_location
+      - distance_miles, fuel_consumed_gallons, trip_duration_hours
+      - delivery_status, fuel_cost, maintenance_cost, total_cost
+      - weather_conditions, traffic_conditions, safety_score
+    - **Business Logic**:
+      - total_cost = fuel_cost + maintenance_cost + driver_wages
+      - fuel_cost = fuel_consumed_gallons * $3.50 (average fuel price)
+      - delivery_status: scheduled, in_transit, delivered, delayed, cancelled
+      - safety_score: 0-100 (higher = safer driving)
+      - trip_duration_hours = distance_miles / 50 (average speed)
+    - **Analyst-Friendly Context**: Include vehicle details, driver info, trip metrics, and operational costs in every row
+  `,
+  Custom: `
+    **CRITICAL: Custom Business Model Requirements**
+    - **Domain-Specific Pricing**: Adapt pricing to the specific industry described
+    - **Realistic Event Patterns**: Define events that reflect actual business operations
+    - **Industry-Specific Metrics**: Include KPIs relevant to the business domain
+    - **Logical Relationships**: Ensure all data relationships make business sense
+    - **Analyst-Friendly Context**: Provide rich context for slicing and dicing data
   `,
 };
-
-// --- BEGIN ENHANCED SCHEMAS ---
-const enhancedSchemas: Record<string, EnhancedSchema & { rules?: any }> = {
-  SaaS: {
-    OBT: [
-      "user_id",
-      "signup_date",
-      "event_type",
-      "plan",
-      "billing_cycle",
-      "price",
-      "country",
-      "marketing_channel",
-      "payment_amount",
-    ],
-    Star: {
-      fact: "subscriptions_fact",
-      dimensions: [
-        "users_dim (user_id, signup_date, country, marketing_channel)",
-        "plans_dim (plan_id, name, billing_cycle, price)",
-        "events_dim (event_id, event_type, event_date, payment_amount)",
-      ],
-    },
-    metrics: [
-      "Active Subscribers",
-      "MRR/ARR",
-      "Churn Rate",
-      "CAC by channel",
-      "Retention by cohort",
-    ],
-    rules: {
-      plan_prices: {
-        Basic: { monthly: 10, annual: 100 },
-        Pro: { monthly: 29, annual: 299 },
-        Enterprise: { monthly: 99, annual: 999 },
-      },
-      churn_rate: { monthly: 0.08, annual: 0.03 },
-      country_weights: { US: { Enterprise: 0.5 }, Other: { Enterprise: 0.1 } },
-    },
-  },
-  Ecommerce: {
-    OBT: [
-      "customer_id",
-      "event_type",
-      "event_date",
-      "product_id",
-      "product_name",
-      "category",
-      "price",
-      "quantity",
-      "shipping_cost",
-      "discount_amount",
-      "order_id",
-    ],
-    Star: {
-      fact: "orders_fact",
-      dimensions: [
-        "customers_dim (customer_id, signup_date, country, email_domain)",
-        "products_dim (product_id, name, category, brand, price)",
-        "orders_dim (order_id, order_date, shipping_cost, discount_amount, payment_method)",
-        "categories_dim (category_id, category_name, parent_category)",
-      ],
-    },
-    metrics: [
-      "Total Orders",
-      "Average Order Value",
-      "Conversion Funnel",
-      "Repeat Purchase Rate",
-      "Revenue by Category",
-    ],
-    rules: {
-      product_price_range: [5, 500],
-      quantity_range: [1, 5],
-      shipping_cost_range: [0, 20],
-      discount_range: [0, 50],
-    },
-  },
-  Healthcare: {
-    OBT: [
-      "patient_id",
-      "event_type",
-      "event_date",
-      "provider_id",
-      "facility_id",
-      "procedure_code",
-      "procedure_cost",
-      "claim_id",
-      "claim_amount",
-      "insurance_payout",
-    ],
-    Star: {
-      fact: "procedures_fact",
-      dimensions: [
-        "patients_dim (patient_id, dob, gender, insurance_type, primary_care_physician)",
-        "providers_dim (provider_id, specialty, license_number, years_experience)",
-        "facilities_dim (facility_id, name, location, facility_type, bed_count)",
-        "claims_dim (claim_id, status, submission_date, payout_date, denial_reason)",
-        "procedures_dim (procedure_code, procedure_name, cpt_code, typical_duration)",
-      ],
-    },
-    metrics: [
-      "Claim Approval Rate",
-      "Avg Cost per Procedure",
-      "Utilization by Specialty",
-      "Payout Lag Days",
-      "Patient Visits per Month",
-    ],
-    rules: {
-      procedure_cost_range: [100, 2000],
-      claim_amount_range: [100, 5000],
-      insurance_payout_ratio: [0.6, 0.95],
-    },
-  },
-  Fintech: {
-    OBT: [
-      "account_id",
-      "transaction_id",
-      "event_type",
-      "event_date",
-      "amount",
-      "fee",
-      "currency",
-      "status",
-      "is_fraud",
-    ],
-    Star: {
-      fact: "transactions_fact",
-      dimensions: [
-        "accounts_dim (account_id, open_date, type, country, credit_score)",
-        "currencies_dim (currency_code, country, exchange_rate, last_updated)",
-        "merchants_dim (merchant_id, merchant_name, category, risk_level)",
-        "fraud_alerts_dim (alert_id, transaction_id, alert_type, resolution_status)",
-      ],
-    },
-    metrics: [
-      "Daily Transaction Volume",
-      "Revenue from Fees",
-      "Fraud Rate",
-      "Avg Transaction Value",
-      "Currency Usage Breakdown",
-    ],
-    rules: {
-      transaction_amount_range: [1, 10000],
-      fee_percentage: [0.5, 3.0],
-      fraud_probability: 0.01,
-    },
-  },
-  Education: {
-    OBT: [
-      "student_id",
-      "event_type",
-      "event_date",
-      "course_id",
-      "instructor_id",
-      "tuition_fee",
-      "scholarship_amount",
-      "net_paid",
-      "assignment_score",
-      "grade",
-    ],
-    Star: {
-      fact: "enrollments_fact",
-      dimensions: [
-        "students_dim (student_id, enrollment_date, major, gpa, academic_status)",
-        "courses_dim (course_id, title, credits, department, prerequisites)",
-        "instructors_dim (instructor_id, name, department, tenure_status, research_area)",
-        "departments_dim (department_id, department_name, budget, faculty_count)",
-        "scholarships_dim (scholarship_id, name, amount, eligibility_criteria)",
-      ],
-    },
-    metrics: [
-      "Avg GPA by Course",
-      "Enrollment Trends",
-      "Tuition Collected",
-      "Scholarship Coverage",
-      "Student Retention",
-    ],
-    rules: {
-      tuition_fee_range: [1000, 20000],
-      scholarship_amount_range: [0, 10000],
-      assignment_score_range: [0, 100],
-      grade_scale: ["A", "B", "C", "D", "F"],
-    },
-  },
-  Retail: {
-    OBT: [
-      "store_id",
-      "product_id",
-      "sale_date",
-      "event_type",
-      "quantity",
-      "unit_price",
-      "inventory_status",
-      "return_reason",
-    ],
-    Star: {
-      fact: "sales_fact",
-      dimensions: [
-        "stores_dim (store_id, name, region, manager, square_footage, opening_date)",
-        "products_dim (product_id, name, category, brand, supplier, cost_price)",
-        "customers_dim (customer_id, loyalty_tier, signup_date, preferred_store)",
-        "inventory_dim (product_id, store_id, stock_level, reorder_point, last_restock_date)",
-        "suppliers_dim (supplier_id, name, category, reliability_rating)",
-      ],
-    },
-    metrics: [
-      "Sales by Region",
-      "Inventory Turnover",
-      "Return Rate",
-      "Revenue per Square Foot",
-      "Top Selling Products",
-    ],
-    rules: {
-      unit_price_range: [1, 300],
-      quantity_range: [1, 10],
-      stock_level_range: [0, 500],
-      return_probability: 0.1,
-    },
-  },
-  Manufacturing: {
-    OBT: [
-      "work_order_id",
-      "product_id",
-      "start_time",
-      "end_time",
-      "units_produced",
-      "units_failed",
-      "material_cost",
-      "downtime_hours",
-    ],
-    Star: {
-      fact: "production_fact",
-      dimensions: [
-        "work_orders_dim (work_order_id, customer_id, start_date, scheduled_completion, priority)",
-        "products_dim (product_id, name, category, standard_cost, material_requirements)",
-        "machines_dim (machine_id, model, capacity, maintenance_schedule, operator_id)",
-        "suppliers_dim (supplier_id, name, material_type, delivery_lead_time, quality_rating)",
-        "employees_dim (employee_id, role, department, hire_date, training_level)",
-      ],
-    },
-    metrics: [
-      "Yield Rate",
-      "Avg Cost per Unit",
-      "Downtime by Line",
-      "Order Completion Time",
-      "Material Waste",
-    ],
-    rules: {
-      units_produced_range: [10, 1000],
-      units_failed_rate: [0.01, 0.1],
-      material_cost_range: [100, 10000],
-      downtime_hours_range: [0, 24],
-    },
-  },
-  Transportation: {
-    OBT: [
-      "trip_id",
-      "vehicle_id",
-      "driver_id",
-      "trip_start",
-      "trip_end",
-      "distance_km",
-      "duration_min",
-      "fare_amount",
-      "fuel_cost",
-      "maintenance_cost",
-    ],
-    Star: {
-      fact: "trips_fact",
-      dimensions: [
-        "vehicles_dim (vehicle_id, model, year, fuel_type, capacity, registration_status)",
-        "drivers_dim (driver_id, name, hire_date, license_class, safety_rating, vehicle_preference)",
-        "customers_dim (customer_id, name, loyalty_tier, preferred_payment_method)",
-        "locations_dim (location_id, city, state, airport_code, population)",
-        "routes_dim (route_id, origin_id, destination_id, typical_distance, typical_duration)",
-      ],
-    },
-    metrics: [
-      "Total Trips",
-      "Avg Fare per KM",
-      "Fuel Cost Ratio",
-      "Maintenance Spend",
-      "Driver Utilization",
-    ],
-    rules: {
-      distance_km_range: [1, 500],
-      duration_min_range: [5, 600],
-      fare_amount_range: [5, 200],
-      fuel_cost_range: [10, 150],
-      maintenance_cost_range: [50, 1000],
-    },
-  },
-};
-// --- END ENHANCED SCHEMAS ---
 
 export interface GenerateSpecPromptParams {
   businessType: string;
@@ -377,196 +303,175 @@ export function generateSpecPrompt(params: GenerateSpecPromptParams) {
   const selectedInstructions =
     businessTypeInstructions[businessType] || businessTypeInstructions["SaaS"];
 
-  // Inject schema and metrics
-  const schemaInfo = enhancedSchemas[businessType] || enhancedSchemas["SaaS"];
-  const schemaTypeKey = schemaType === "Star Schema" ? "Star" : "OBT";
-  const schemaExample = schemaInfo[schemaTypeKey];
-  const metricsExample = schemaInfo.metrics;
-  const rulesExample = schemaInfo.rules;
-
+  // Build schema guidance based on schema type
   let schemaSection = "";
-  if (schemaTypeKey === "OBT" && Array.isArray(schemaExample)) {
-    schemaSection = `\n- Example OBT Columns: ${schemaExample.join(", ")}`;
-  } else if (
-    schemaTypeKey === "Star" &&
-    typeof schemaExample === "object" &&
-    schemaExample !== null &&
-    "fact" in schemaExample &&
-    "dimensions" in schemaExample
-  ) {
-    schemaSection = `\n- Example Star Schema:\n  Fact Table: ${
-      schemaExample.fact
-    }\n  Dimensions: ${schemaExample.dimensions.join("; ")}`;
+  if (schemaType === "Star Schema") {
+    schemaSection = `
+- **Star Schema Structure**: Design a normalized schema with:
+  - **Fact Table**: Main events/transactions (e.g., \`transactions_fact\`, \`orders_fact\`)
+  - **Dimension Tables**: Context entities (e.g., \`customers_dim\`, \`products_dim\`, \`stores_dim\`)
+  - **Relationships**: Foreign keys linking fact to dimensions
+- **Analyst Benefits**: Enables complex joins, dimensional analysis, and data warehouse patterns`;
+  } else {
+    schemaSection = `
+- **One Big Table (OBT) Structure**: Design a denormalized single table with:
+  - **All Context Fields**: Include entity attributes directly in each row
+  - **Event + Context**: Every row contains both event data and relevant entity context
+  - **Analyst Benefits**: Immediate analysis without joins, perfect for quick insights`;
   }
-  schemaSection += `\n- Example Analyst Metrics: ${metricsExample.join(", ")}`;
 
-  let rulesSection = "";
-  if (rulesExample) {
-    rulesSection = `\n- Realism Rules: Apply the following constraints to generate believable data:\n${JSON.stringify(
-      rulesExample,
-      null,
-      2
-    )}`;
+  // Build metadata section if provided
+  let metadataSection = "";
+  if (timeRange || growthPattern || variationLevel || granularity) {
+    metadataSection = `\n- **Metadata** (optional):\n`;
+    if (timeRange)
+      metadataSection += `  - "time_range": ${JSON.stringify(timeRange)}\n`;
+    if (granularity) metadataSection += `  - "granularity": "${granularity}"\n`;
+    if (growthPattern)
+      metadataSection += `  - "growth_pattern": "${growthPattern}"\n`;
+    if (variationLevel)
+      metadataSection += `  - "variation_level": "${variationLevel}"\n`;
   }
 
   return `You are a data architect designing a hyper-realistic dataset specification for a '${businessType}' business.
-Your output MUST be a JSON object that defines a blueprint for a data generation script.
-The script will use your specification to generate a large number of events that simulate real-world user behavior over time.
 
-- Business Type Context: ${businessType}
+**Your Goal**: Define a realistic schema and simulation logic for generating synthetic analytics-ready data that data analysts can immediately use for business intelligence, reporting, and advanced analytics.
+
+**CRITICAL: Raw Data for Analyst Practice**
+- Generate **raw, unaggregated event-level data** - NOT pre-calculated metrics or summaries
+- Analysts need to practice: GROUP BY, SUM(), COUNT(), AVG(), JOINs, window functions, etc.
+- Data should be perfect for creating charts, dashboards, and visualizations
+- Include all necessary context fields so analysts can slice and dice the data
+- Focus on individual transactions, events, or records that can be aggregated later
+- **Do not include columns for pre-aggregated values (e.g., acv, mrr, totals, averages, etc). Only include the raw columns needed to calculate them.**
+
+**CRITICAL: Realistic Values and Business Logic**
+- **NEVER use 0 for realistic prices** - use the pricing guidelines provided
+- **Ensure mathematical consistency** - totals should equal sums of components
+- **Use realistic frequencies** - events should occur at believable rates
+- **Include proper business relationships** - foreign keys, status flows, etc.
+- **Provide rich context** - analysts need dimensions to filter and group by
+
+**CRITICAL: Adapt to User Context**
+- If the user specifies a particular business context (e.g., "B2B SaaS for construction management"), adapt your schema to that specific domain
+- Use the business type guidance as a starting point, but customize entities, events, and relationships for the specific use case
+- Ensure all generated data reflects the actual business operations described by the user
+
+**CRITICAL: Use correct faker method names:**
+- For names: use "person.fullName" (not "person.name")
+- For emails: use "internet.email" (not "email") 
+- For product names: use "commerce.productName" (not "commerce.product_name")
+- For prices: use "commerce.price" (not "commerce.price")
+- For categories: use "commerce.department" (not "commerce.category")
+- For numbers: use "number.int" (not "random.number")
+
 ${selectedInstructions}
-${schemaSection}${rulesSection}
 
-- Time Range: ${timeRange}
-- Growth Pattern: ${growthPattern} (e.g., more signups at the start for 'spike')
-- Data Variation: ${variationLevel}
-- Granularity: ${granularity}
-${
-  schemaType === "Star Schema"
-    ? `- Schema Hint: The user prefers a Star Schema. Design the entities to be clean and distinct, representing potential dimension tables. The final output will still be one big table, but the design should reflect this preference.
+**Schema Requirements:**${schemaSection}
 
-CRITICAL REQUIREMENT: When schemaType is 'Star Schema', your output JSON MUST include a 'Star' property at the root level, with a 'fact' table and one or more 'dimensions' arrays, e.g.:
+**Analyst-Friendly Data Structure:**
+- **Event-Level Records**: Each row represents a single event, transaction, or interaction
+- **Rich Context**: Include entity attributes (customer info, product details, etc.) for easy filtering and grouping
+- **No Pre-Aggregations**: Avoid calculated totals, averages, or summaries - let analysts compute these
+- **Visualization-Ready**: Include date/time fields, categorical dimensions, and numeric measures
+- **Join-Friendly**: Ensure proper foreign keys and relationships for complex analysis
 
-"Star": {
-  "fact": "fact_table_name",
-  "dimensions": ["dim1 (col1, col2, ...)", "dim2 (col1, col2, ...)"]
-}
-`
-    : ""
-}
-${context ? `\n- Additional User Context: ${context}` : ""}
+**Simulation Logic Guidelines:**
+- **Initial Events**: Define the starting point for each entity (e.g., signup, first purchase)
+  - Use realistic frequencies: 0.05-0.2 avg_per_entity_per_month for new entities
+- **Recurring Events**: Use \`frequency: { "on": "entity.attribute" }\` to control periodicity
+  - Examples: billing_cycle for subscriptions, maintenance_schedule for equipment
+- **Random Events**: Use \`avg_per_entity_per_month\` for engagement events
+  - High frequency: 20-100 (logins, views, small transactions)
+  - Medium frequency: 5-20 (purchases, feature usage, assignments)
+  - Low frequency: 0.5-5 (reviews, upgrades, major events)
+- **Churn Events**: Use \`monthly_rate\` for cancellations or departures
+  - Typical rates: 0.01-0.05 (1-5% monthly churn)
+  - High churn: 0.05-0.15 (5-15% monthly churn)
 
-Based on these parameters, design the 'simulation' part of the spec. For example, a 'spike' growth pattern should lead to a higher concentration of 'signup' events at the beginning of the time range. A 'steady' pattern should have them spread out evenly.
-
-CRITICAL REQUIREMENT: Your output must be ONLY the JSON object. Do not include any markdown, explanations, or other text.
-
-The JSON object must have exactly three root keys: "entities", "event_stream_table", and "simulation". If schemaType is 'Star Schema', it must also include a fourth root key: "Star".
-
-REQUIRED STRUCTURE:
-1. **entities**: An array of objects, where each object represents a core actor in the simulation (e.g., 'user', 'product').
-    - REQUIRED: 'name': The singular name of the entity (e.g., "user").
-    - REQUIRED: 'attributes': An object defining the entity's properties.
-        - Each attribute must have a 'type' (e.g., 'id', 'faker', 'choice', 'date', 'number').
-        - Provide necessary parameters for each type (e.g., 'prefix' for 'id', 'method' for 'faker', 'values' and 'weights' for 'choice').
-        - For conditional values, use 'key=value' pairs joined with '&' (e.g., "plan=Pro & billing_cycle=monthly": 29.99).
-
-2. **event_stream_table**: An object defining the final output table where simulated events will be stored. Your goal is to create a denormalized "One Big Table" (OBT) suitable for analytics.
-    - REQUIRED: 'name': The name of the output table (e.g., "saas_events").
-    - REQUIRED: 'columns': An array of objects defining the table's columns.
-        - Each column must have 'name' and 'source' properties.
-        - 'source' must define how to populate this column's value.
-
-3. **simulation**: An object defining the logic for how events are generated over a time period.
-    - REQUIRED: 'initial_event': The name of the first event for an entity (e.g., "signup").
-    - REQUIRED: 'events': An object where keys are event names.
-        - Each event MUST define its 'type' ('initial', 'recurring', 'random', 'churn').
-        - Each event MUST include 'outputs' mapping for the event stream table columns.
-        - For 'recurring' events: include 'frequency'.
-        - For 'random' events: include 'avg_per_entity_per_month'.
-        - For 'churn' events: include 'monthly_rate'.
-
-4. **Star** (if schemaType is 'Star Schema'): An object with 'fact' and 'dimensions' keys, e.g.:
-    - 'fact': The name of the fact table.
-    - 'dimensions': An array of dimension table definitions.
-
-Example structure for a SaaS business:
-
+**Output Format:**
+Your response must be valid JSON with this structure:
 {
   "entities": [
     {
-      "name": "user",
+      "name": "entity_name",
       "attributes": {
-        "user_id": { "type": "id", "prefix": "usr_" },
-        "country": {
-          "type": "choice",
-          "values": ["US", "UK", "India", "Other"],
-          "weights": [0.5, 0.2, 0.15, 0.15]
-        },
-        "marketing_channel": { "type": "choice", "values": ["organic", "paid_search", "social", "referral"], "weights": [0.4, 0.3, 0.2, 0.1] },
-        "plan": {
-          "type": "choice",
-          "values": ["Free", "Trial", "Basic", "Pro", "Enterprise"],
-          "weights": [0.2, 0.1, 0.4, 0.2, 0.1]
-        },
-        "billing_cycle": { "type": "choice", "values": ["monthly", "annual"], "weights": [0.7, 0.3] },
-        "price": {
-          "type": "conditional",
-          "on": ["plan", "billing_cycle"],
-          "cases": {
-            "plan=Free": 0,
-            "plan=Trial": 0,
-            "plan=Basic & billing_cycle=monthly": 9.99,
-            "plan=Basic & billing_cycle=annual": 99.99,
-            "plan=Pro & billing_cycle=monthly": 29.99,
-            "plan=Pro & billing_cycle=annual": 299.99,
-            "plan=Enterprise & billing_cycle=monthly": 99.99,
-            "plan=Enterprise & billing_cycle=annual": 999.99
+        "attribute_name": {
+          "type": "faker|choice|conditional|id",
+          "method": "namespace.method", // Use 'faker.method' only when type is 'faker'
+          "values": ["option1", "option2"], // for choice type
+          "weights": [0.6, 0.4], // for choice type
+          "on": ["condition_field"], // for conditional type
+          "cases": { // for conditional type
+            "condition_value": result_value,
+            "default": fallback_value
           }
         }
       }
     }
   ],
   "event_stream_table": {
-    "name": "saas_events",
+    "name": "table_name",
     "columns": [
-      { "name": "event_id", "source": { "type": "id", "prefix": "evt_" } },
-      { "name": "timestamp", "source": { "type": "timestamp" } },
-      { "name": "user_id", "source": { "type": "reference", "entity": "user", "attribute": "user_id" } },
-      { "name": "event_name", "source": { "type": "event_name" } },
-      { "name": "plan", "source": { "type": "reference", "entity": "user", "attribute": "plan" } },
-      { "name": "billing_cycle", "source": { "type": "reference", "entity": "user", "attribute": "billing_cycle" } },
-      { "name": "country", "source": { "type": "reference", "entity": "user", "attribute": "country" } },
-      { "name": "marketing_channel", "source": { "type": "reference", "entity": "user", "attribute": "marketing_channel" } },
-      { "name": "payment_amount", "source": { "type": "lookup", "from": "event_specific_outputs" } }
+      {
+        "name": "column_name",
+        "source": {
+          "type": "reference|literal|timestamp|id|choice",
+          "entity": "entity_name", // for reference type
+          "attribute": "entity.attribute", // for reference type
+          "value": "static_value", // for literal type
+          "values": ["option1", "option2"], // for choice type
+          "weights": [0.6, 0.4] // for choice type
+        }
+      }
     ]
   },
   "simulation": {
-    "initial_event": "signup",
+    "initial_event": "event_name",
     "events": {
-      "signup": {
-        "type": "initial",
+      "event_name": {
+        "type": "recurring|random|churn",
+        "frequency": { "on": "entity.attribute" }, // for recurring events
+        "avg_per_entity_per_month": 5, // for random events
+        "monthly_rate": 0.05, // for churn events
         "outputs": {
-          "payment_amount": { "type": "reference", "entity": "user", "attribute": "price" }
-        }
-      },
-      "renewal": {
-        "type": "recurring",
-        "frequency": { "type": "lookup", "on": "user.billing_cycle" },
-        "outputs": {
-          "payment_amount": { "type": "reference", "entity": "user", "attribute": "price" }
-        }
-      },
-      "api_call": {
-        "type": "random",
-        "avg_per_entity_per_month": 20,
-        "outputs": {
-          "payment_amount": { "type": "literal", "value": 0 }
-        }
-      },
-      "cancellation": {
-        "type": "churn",
-        "monthly_rate": 0.08,
-        "outputs": {
-          "payment_amount": { "type": "literal", "value": 0 }
-        }
-      },
-      "failed_renewal": {
-        "type": "random",
-        "avg_per_entity_per_month": 0.02,
-        "outputs": {
-          "payment_amount": { "type": "literal", "value": 0 }
+          "column_name": {
+            "type": "reference|literal",
+            "entity": "entity_name", // for reference
+            "attribute": "entity.attribute", // for reference
+            "value": "static_value" // for literal
+          }
         }
       }
     }
-  },
-  "Star": {
-    "fact": "subscriptions_fact",
-    "dimensions": [
-      "users_dim (user_id, signup_date, country, marketing_channel)",
-      "plans_dim (plan_id, name, billing_cycle, price)",
-      "events_dim (event_id, event_type, event_date, payment_amount)"
-    ]
-  }
+  }${metadataSection}
 }
-`;
+
+**CRITICAL Consistency Rules:**
+- **Use realistic pricing**: Follow the pricing guidelines for each business type
+- **Ensure mathematical consistency**: totals = sums of components
+- **Use consistent value formatting**: numbers without quotes (e.g., 49, not "49")
+- **Standardize field names**: Use consistent casing (e.g., snake_case for all)
+- **Reference format**: Always use \`entity.attribute\` format for clarity
+- **Realistic values**: Never use random strings or generic codes for business fields
+- **Raw data focus**: Generate individual records, not summaries or aggregations
+
+**CRITICAL: Business Type Validation**
+- **B2B SaaS**: Must include user_id, company_id, user_role, subscription_plan, billing_cycle, plan_price, contract_value. NEVER include product_id, product_name, category
+- **B2C SaaS**: Must include user_id, user_age, device_type, subscription_plan, billing_cycle, plan_price. NEVER include product_id, product_name, category, company_id
+- **Ecommerce**: Must include customer_id, product_id, product_name, category, price. NEVER include subscription_plan, billing_cycle
+- **Healthcare**: Must include patient_id, provider_id, procedure_code. NEVER include product_id, category
+- **Fintech**: Must include account_id, transaction_id, amount, currency. NEVER include product_id, category
+- **Education**: Must include student_id, course_id, instructor_id. NEVER include product_id, category
+- **Retail**: Must include customer_id, product_id, store_id, quantity, unit_price. NEVER include subscription_plan
+- **Manufacturing**: Must include product_id, machine_id, work_order_id. NEVER include customer_id, subscription_plan
+- **Transportation**: Must include vehicle_id, driver_id, trip_id. NEVER include product_id, subscription_plan
+
+**CRITICAL: Example Realistic Values**
+- **B2B SaaS plan_price**: Starter=99, Professional=299, Enterprise=999, Custom=5000
+- **B2C SaaS plan_price**: Free=0, Basic=9, Premium=29, Family=79
+- **Ecommerce product_price**: Electronics=50-2000, Clothing=10-200, Home=20-500
+- **Healthcare procedure_cost**: Primary=50-200, Specialist=150-500, Surgery=5000-50000
+- **Fintech transaction_amount**: Small=1-100, Medium=100-1000, Large=1000-10000
+- **Education course_price**: Free=0, Basic=50-200, Advanced=200-1000, Degree=5000-50000`;
 }

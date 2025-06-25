@@ -36,19 +36,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Log the incoming prompt
-    if (process.env.NODE_ENV !== "production") {
-      console.log("[API] Incoming request:", {
-        businessType,
-        rowCount,
-        timeRange,
-        growthPattern,
-        variationLevel,
-        granularity,
-        schemaType,
-      });
-    }
-
     // 1. Generate the spec from the LLM
     const prompt = generateSpecPrompt({
       businessType,
@@ -69,12 +56,6 @@ export async function POST(req: Request) {
     const inputCost = (promptLengthInTokens / 1000) * 0.005;
     const outputCost = (estimatedOutputTokens / 1000) * 0.015;
     const totalEstimatedCost = inputCost + outputCost;
-
-    console.log(
-      `Estimated tokens: ${promptLengthInTokens} input + ${estimatedOutputTokens} output = ${totalEstimatedTokens} total (~$${totalEstimatedCost.toFixed(
-        4
-      )})`
-    );
 
     // OpenAI API timeout (60s)
     const controller = new AbortController();
@@ -101,8 +82,15 @@ export async function POST(req: Request) {
       throw new Error("No spec generated from OpenAI");
     }
     const spec = JSON.parse(content);
-    console.log("Parsed spec keys:", Object.keys(spec));
-    console.log("Star schema present?", !!spec.Star);
+    if (
+      spec.simulation &&
+      spec.simulation.initial_event &&
+      !spec.simulation.events[spec.simulation.initial_event]
+    ) {
+      // Pick the first event as a fallback
+      const firstEvent = Object.keys(spec.simulation.events)[0];
+      spec.simulation.initial_event = firstEvent;
+    }
 
     // 2. Generate data using the spec
     const factory = new DataFactory(spec);
@@ -113,7 +101,7 @@ export async function POST(req: Request) {
     );
 
     // Format the response
-    const response = generatedData;
+    const response = { ...generatedData, spec };
 
     return NextResponse.json({ data: response });
   } catch (error) {
