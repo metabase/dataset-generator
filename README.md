@@ -1,6 +1,6 @@
-# Dataset Generator
+# AI Dataset Generator
 
-**Generate high-quality, realistic datasets for demos, learning, and analysis. Instantly preview data, export as CSV or SQL, and explore with Metabase.**
+**Generate realistic datasets for demos, learning, and dashboards. Instantly preview data, export as CSV or SQL, and explore with Metabase.**
 
 Features:
 
@@ -18,7 +18,7 @@ Features:
 
 - **Next.js** (App Router, TypeScript)
 - **Tailwind CSS + ShadCN UI** (modern, dark-themed UI)
-- **OpenAI API** (GPT-4 for data generation)
+- **OpenAI API** (GPT-4o for data generation)
 - **Metabase** (Dockerized, launched on demand)
 
 ## Getting Started
@@ -76,19 +76,21 @@ When you click "Start Metabase", it will launch Metabase in a Docker container. 
 2. Follow Metabase's setup process
 3. To analyze your generated data:
    - Use the CSV export feature to download your dataset
-   - In Metabase, use the "Upload Data" feature to analyze your CSV files
-   - Or connect to your own database where you've loaded the data
+   - In Metabase, use the ["Upload Data" feature](https://www.metabase.com/docs/latest/exploration-and-organization/uploads) to analyze your CSV files
+   - Or [connect to your own database](https://www.metabase.com/docs/latest/databases/connecting) where you've loaded the data
 
 ## Cost & Data Generation Summary
 
 | Action       | Calls OpenAI? | Cost?  | Uses LLM? | Uses Faker? | Row Count |
 | ------------ | :-----------: | :----: | :-------: | :---------: | :-------: |
-| Preview      |      Yes      | ~$0.04 |    Yes    |     Yes     |    10     |
+| Preview      |      Yes      | ~$0.05 |    Yes    |     Yes     |    10     |
 | Download CSV |      No       |   $0   |    No     |     Yes     |   100+    |
 | Download SQL |      No       |   $0   |    No     |     Yes     |   100+    |
 
-- **You only pay for the preview/spec generation.**
-- **All downloads use the same columns/spec, just with more rows, and are free.**
+**Key Points:**
+
+- **You only pay for the preview/spec generation** (~$0.05 per preview)
+- **All downloads use the same columns/spec, just with more rows, and are free**
 
 ## How It Works
 
@@ -107,13 +109,6 @@ When you click "Start Metabase", it will launch Metabase in a Docker container. 
 - **One Big Table (OBT):** A single, denormalized table with all relevant columns.
 - **Star Schema:** Multiple tables (fact + dimension) for more advanced analytics. The LLM spec guides the structure, and the generator outputs all tables locally.
 
-## Cost Transparency
-
-See the cost summary above. You only pay for the preview/spec generation. All downloads use the same columns/spec, just with more rows, and are free.
-
 ## Extending/Contributing
 
-- To add new business types, rules, or schema logic, edit `lib/spec-prompts.ts` and `lib/data-factory.ts`.
-- Pull requests and suggestions are welcome!
-
-MIT License
+- To add new business types, rules, or schema logic, edit `lib/spec-prompts.ts`

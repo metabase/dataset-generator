@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import DataTable from "@/components/DataTable";
 import ExportButtons from "@/components/ExportButtons";
-import { toCSV, toSQL, downloadFile } from "@/lib/export";
+import { toCSV, toSQL } from "@/lib/export";
 import toast, { Toaster } from "react-hot-toast";
 
 interface Prompt {
