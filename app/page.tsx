@@ -325,7 +325,7 @@ export default function Home() {
       >
         <header className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white text-left leading-tight">
-            Dataset
+            AI Dataset
             <br />
             Generator
           </h1>

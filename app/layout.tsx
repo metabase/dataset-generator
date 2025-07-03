@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Dataset Generator",
+  title: "AI Dataset Generator",
   description:
     "Generate realistic synthetic datasets for analytics and learning",
   icons: {
