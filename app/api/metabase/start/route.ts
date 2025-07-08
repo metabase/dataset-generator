@@ -28,7 +28,7 @@ export async function POST() {
     }
 
     // Start containers using docker-compose
-    await execAsync("docker-compose up -d db metabase");
+    await execAsync("docker-compose up -d db_metabase metabase");
 
     return NextResponse.json({
       message: "Metabase is starting",

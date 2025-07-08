@@ -14,7 +14,7 @@ export async function GET() {
 
     if (
       !containers.includes("dataset_generator_metabase") ||
-      !containers.includes("dataset_generator_postgres")
+      !containers.includes("dataset_generator_postgres_metabase")
     ) {
       return NextResponse.json({
         ready: false,

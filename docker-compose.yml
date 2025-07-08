@@ -1,16 +1,34 @@
 services:
-  db:
+  db_litellm:
     image: postgres:15
-    container_name: dataset_generator_postgres
-    restart: unless-stopped
+    container_name: dataset_generator_postgres_litellm
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: litellm
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_litellm:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d litellm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db_metabase:
+    image: postgres:15
+    container_name: dataset_generator_postgres_metabase
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: dataset_generator
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata_metabase:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
@@ -31,9 +49,9 @@ services:
       MB_DB_PORT: 5432
       MB_DB_USER: postgres
       MB_DB_PASS: postgres
-      MB_DB_HOST: db
+      MB_DB_HOST: db_metabase
     depends_on:
-      db:
+      db_metabase:
         condition: service_healthy
     networks:
       - app-network
@@ -46,18 +64,19 @@ services:
       - "4000:4000"
     volumes:
       - ./litellm-config.yaml:/app/config.yaml
-    command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "8"]
+    command:
+      ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "8"]
     environment:
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-1234}
       LITELLM_SALT_KEY: ${LITELLM_SALT_KEY:-sk-1234}
-      DATABASE_URL: "postgresql://postgres:postgres@db:5432/litellm"
+      DATABASE_URL: "postgresql://postgres:postgres@db_litellm:5432/litellm"
       STORE_MODEL_IN_DB: "True"
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      GOOGLE_GENAI_API_KEY: ${GOOGLE_GENAI_API_KEY:-}
-      AZURE_API_KEY: ${AZURE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GOOGLE_GENAI_API_KEY: ${GOOGLE_GENAI_API_KEY}
+      AZURE_API_KEY: ${AZURE_API_KEY}
     depends_on:
-      db:
+      db_litellm:
         condition: service_healthy
     networks:
       - app-network
@@ -67,4 +86,5 @@ networks:
     driver: bridge
 
 volumes:
-  pgdata:
+  pgdata_litellm:
+  pgdata_metabase:
