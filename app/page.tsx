@@ -126,7 +126,7 @@ export default function Home() {
       toast.dismiss(toastId);
       toast.error(
         <span className="text-sm">❌ Failed to generate dataset</span>,
-        { icon: null }
+        { duration: 8000, icon: null }
       );
     } finally {
       setLoading(false);
@@ -164,7 +164,7 @@ export default function Home() {
       toast.dismiss(toastId);
       toast.error(
         <span className="text-sm">❌ Failed to generate dataset</span>,
-        { icon: null }
+        { duration: 8000, icon: null }
       );
     } finally {
       setLoading(false);
@@ -192,7 +192,7 @@ export default function Home() {
           <span className="text-sm">
             ❌ {err.error || "Failed to start Metabase"}
           </span>,
-          { duration: Infinity, icon: null }
+          { duration: 8000, icon: null }
         );
         return;
       }
@@ -280,7 +280,7 @@ export default function Home() {
           <span className="text-sm">
             ❌ {err.error || "Failed to stop Metabase"}
           </span>,
-          { duration: Infinity, icon: null }
+          { duration: 8000, icon: null }
         );
         return;
       }
@@ -298,7 +298,7 @@ export default function Home() {
         <span className="text-sm">
           ❌ Failed to stop Metabase. Please try again.
         </span>,
-        { duration: Infinity, icon: null }
+        { duration: 8000, icon: null }
       );
     }
   }
