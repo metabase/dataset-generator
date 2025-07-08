@@ -1,12 +1,11 @@
 model_list:
   # OpenAI Models
-  - model_name: gpt-4.1
+  - model_name: gpt-4o
     litellm_params:
-      model: openai/gpt-4.1
+      model: openai/gpt-4o
       api_key: os.environ/OPENAI_API_KEY
 
   # Anthropic Models
-
   - model_name: claude-4-sonnet
     litellm_params:
       model: claude-opus-4-20250514
