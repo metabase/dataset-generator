@@ -5,9 +5,11 @@ import {
   GenerateSpecPromptParams,
 } from "@/lib/spec-prompts";
 import { DataFactory } from "@/lib/data-factory";
+import axios from "axios";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.LITELLM_MASTER_KEY || "sk-1234",
+  baseURL: process.env.LLM_ENDPOINT || "http://localhost:4000",
 });
 
 export async function POST(req: Request) {
@@ -36,6 +38,19 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check if LiteLLM is reachable before making a request
+    try {
+      await axios.get(process.env.LLM_ENDPOINT || "http://localhost:4000");
+    } catch (e) {
+      return NextResponse.json(
+        {
+          error:
+            "LiteLLM is not running. Please start it with `docker-compose up litellm db`.",
+        },
+        { status: 503 }
+      );
+    }
+
     // 1. Generate the spec from the LLM
     const prompt = generateSpecPrompt({
       businessType,
@@ -48,26 +63,19 @@ export async function POST(req: Request) {
     });
 
     // Estimate token usage for cost visibility
-    const promptLengthInTokens = Math.round(JSON.stringify(prompt).length / 4);
-    const estimatedOutputTokens = 2000; // Conservative estimate for JSON spec response
-    const totalEstimatedTokens = promptLengthInTokens + estimatedOutputTokens;
+    // (Removed hardcoded cost estimation as it only applies to OpenAI GPT-4o)
 
-    // GPT-4o pricing: $0.005 per 1K input tokens, $0.015 per 1K output tokens
-    const inputCost = (promptLengthInTokens / 1000) * 0.005;
-    const outputCost = (estimatedOutputTokens / 1000) * 0.015;
-    const totalEstimatedCost = inputCost + outputCost;
-
-    // OpenAI API timeout (60s)
+    // LiteLLM timeout (60s)
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
 
     let completion;
     try {
       completion = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: process.env.LLM_MODEL || "gpt-4o",
         messages: [
           {
-            role: "system",
+            role: "user",
             content: prompt,
           },
         ],
@@ -79,7 +87,7 @@ export async function POST(req: Request) {
 
     const content = completion.choices[0].message.content;
     if (!content) {
-      throw new Error("No spec generated from OpenAI");
+      throw new Error("No spec generated from LLM");
     }
     const spec = JSON.parse(content);
     if (
@@ -104,29 +112,20 @@ export async function POST(req: Request) {
     const response = {
       ...generatedData,
       spec,
-      cost: {
-        estimated: totalEstimatedCost,
-        inputTokens: promptLengthInTokens,
-        outputTokens: estimatedOutputTokens,
-        actualTokens: completion.usage?.total_tokens || totalEstimatedTokens,
-        actualCost: completion.usage
-          ? (completion.usage.prompt_tokens / 1000) * 0.005 +
-            (completion.usage.completion_tokens / 1000) * 0.015
-          : totalEstimatedCost,
+      // Optionally, you could include token usage if available
+      tokens: {
+        input: completion.usage?.prompt_tokens,
+        output: completion.usage?.completion_tokens,
+        total: completion.usage?.total_tokens,
       },
     };
 
-    // Log cost for transparency
-    const actualCost = completion.usage
-      ? (completion.usage.prompt_tokens / 1000) * 0.005 +
-        (completion.usage.completion_tokens / 1000) * 0.015
-      : totalEstimatedCost;
-
-    console.log(
-      `[Dataset Generation] Business: ${businessType}, Rows: ${rowCount}, Cost: $${actualCost.toFixed(
-        4
-      )}, Tokens: ${completion.usage?.total_tokens || "estimated"}`
-    );
+    // Log token usage for transparency (optional)
+    if (completion.usage) {
+      console.log(
+        `[Dataset Generation] Business: ${businessType}, Rows: ${rowCount}, Tokens: ${completion.usage.total_tokens}`
+      );
+    }
 
     return NextResponse.json({ data: response });
   } catch (error) {
