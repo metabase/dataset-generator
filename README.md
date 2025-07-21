@@ -91,9 +91,15 @@ Features:
    - Download your dataset as CSV or SQL Inserts.
    - Click "Start Metabase" to spin up Metabase in Docker.
    - Once Metabase is ready, click "Open Metabase" to explore your data.
+     - In Metabase, use the ["Upload Data" feature](https://www.metabase.com/docs/latest/exploration-and-organization/uploads) to analyze your CSV files
+     - Or [connect to your own database](https://www.metabase.com/docs/latest/databases/connecting) where you've loaded the data
    - When done, click "Stop Metabase" to shut down and clean up Docker containers.
 
 ## How It Works
+
+The dataset generator uses a two-stage process to create realistic business data. First, it leverages large language models to
+generate detailed data specifications based on your business type and parameters. Then, it uses these specifications to create
+unlimited amounts of realistic data locally.
 
 - When you preview a dataset, the app uses LiteLLM (which can route to OpenAI, Anthropic, Google, etc.) to generate a detailed data spec (schema, business rules, event logic) for your chosen business type and parameters.
 - All actual data rows are generated locally using Faker, based on the LLM-generated spec.
@@ -112,16 +118,7 @@ _The above costs and behavior are based on testing with the OpenAI GPT-4o model.
 - **You only pay for the preview/spec generation** (e.g., ~$0.05 per preview with OpenAI GPT-4o)
 - **All downloads use the same columns/spec, just with more rows, and are free**
 
-## Using Metabase
-
-When you click "Start Metabase", it will launch Metabase in a Docker container. Once ready:
-
-1. Click "Open Metabase" to access the Metabase interface
-2. Follow Metabase's setup process
-3. To analyze your generated data:
-   - Use the CSV export feature to download your dataset
-   - In Metabase, use the ["Upload Data" feature](https://www.metabase.com/docs/latest/exploration-and-organization/uploads) to analyze your CSV files
-   - Or [connect to your own database](https://www.metabase.com/docs/latest/databases/connecting) where you've loaded the data
+**Caching:** After your first preview, the app remembers your data structure. If you preview the same business type and settings again, it reuses that structure (free) instead of generating a new one. This saves money and time. You'll see "Using cached spec" in the terminal when this happens. Check cache stats: `curl http://localhost:3000/api/cache/stats` or clear: `curl -X DELETE http://localhost:3000/api/cache/clear`.
 
 ## Project Structure
 

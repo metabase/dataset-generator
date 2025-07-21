@@ -5,6 +5,7 @@ import {
   GenerateSpecPromptParams,
 } from "@/lib/spec-prompts";
 import { DataFactory } from "@/lib/data-factory";
+import { getCachedSpec, cacheSpec } from "@/lib/cache";
 import axios from "axios";
 
 const openai = new OpenAI({
@@ -13,6 +14,8 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: Request) {
+  const startTime = Date.now();
+
   try {
     const {
       businessType,
@@ -51,8 +54,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Generate the spec from the LLM
-    const prompt = generateSpecPrompt({
+    // Check cache first
+    const cacheParams: GenerateSpecPromptParams = {
       businessType,
       schemaType,
       context,
@@ -60,36 +63,62 @@ export async function POST(req: Request) {
       growthPattern,
       variationLevel,
       granularity,
-    });
+    };
 
-    // Estimate token usage for cost visibility
-    // (Removed hardcoded cost estimation as it only applies to OpenAI GPT-4o)
+    const cachedSpec = await getCachedSpec(cacheParams);
+    let spec: any;
+    let completion: any = null;
 
-    // LiteLLM timeout (60s)
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
+    if (cachedSpec) {
+      // Use cached spec - no LLM call needed
+      spec = cachedSpec;
+      const duration = Date.now() - startTime;
+      console.log(`Tokens Used: Free (cached result) - ${duration}ms`);
+    } else {
+      // Cache miss - generate new spec with LLM
+      console.log(`Generating new spec...`);
 
-    let completion;
-    try {
-      completion = await openai.chat.completions.create({
-        model: process.env.LLM_MODEL || "gpt-4o",
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        response_format: { type: "json_object" },
-      });
-    } finally {
-      clearTimeout(timeout);
+      // 1. Generate the spec from the LLM
+      const prompt = generateSpecPrompt(cacheParams);
+
+      // LiteLLM timeout (60s)
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 60000);
+
+      try {
+        completion = await openai.chat.completions.create({
+          model: process.env.LLM_MODEL || "gpt-4o",
+          messages: [
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          response_format: { type: "json_object" },
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      const content = completion.choices[0].message.content;
+      if (!content) {
+        throw new Error("No spec generated from LLM");
+      }
+      spec = JSON.parse(content);
+
+      // Cache the new spec
+      await cacheSpec(cacheParams, spec);
+
+      // Log token usage for transparency (optional)
+      if (completion.usage) {
+        const duration = Date.now() - startTime;
+        console.log(
+          `Tokens Used: ${completion.usage.total_tokens} - ${duration}ms`
+        );
+      }
     }
 
-    const content = completion.choices[0].message.content;
-    if (!content) {
-      throw new Error("No spec generated from LLM");
-    }
-    const spec = JSON.parse(content);
+    // Fix spec if needed (same logic for both cached and new specs)
     if (
       spec.simulation &&
       spec.simulation.initial_event &&
@@ -100,7 +129,7 @@ export async function POST(req: Request) {
       spec.simulation.initial_event = firstEvent;
     }
 
-    // 2. Generate data using the spec
+    // 2. Generate data using the spec (same for both cached and new specs)
     const factory = new DataFactory(spec);
     const generatedData = factory.generate(
       rowCount || 1000,
@@ -108,24 +137,19 @@ export async function POST(req: Request) {
       schemaType
     );
 
-    // Format the response
+    // Format the response (same format as before)
     const response = {
       ...generatedData,
       spec,
-      // Optionally, you could include token usage if available
-      tokens: {
-        input: completion.usage?.prompt_tokens,
-        output: completion.usage?.completion_tokens,
-        total: completion.usage?.total_tokens,
-      },
+      // Include token usage only if we made an LLM call
+      tokens: completion
+        ? {
+            input: completion.usage?.prompt_tokens,
+            output: completion.usage?.completion_tokens,
+            total: completion.usage?.total_tokens,
+          }
+        : undefined,
     };
-
-    // Log token usage for transparency (optional)
-    if (completion.usage) {
-      console.log(
-        `[Dataset Generation] Business: ${businessType}, Rows: ${rowCount}, Tokens: ${completion.usage.total_tokens}`
-      );
-    }
 
     return NextResponse.json({ data: response });
   } catch (error) {
