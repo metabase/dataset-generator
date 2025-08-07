@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 import {
   generateSpecPrompt,
@@ -8,7 +8,13 @@ import { DataFactory } from "@/lib/data-factory";
 import { getCachedSpec, cacheSpec } from "@/lib/cache";
 import axios from "axios";
 
-const openai = new OpenAI({
+// Default OpenAI client for direct API calls
+const directOpenAI = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// LiteLLM client for multi-provider support (when service is running)
+const litellmOpenAI = new OpenAI({
   apiKey: process.env.LITELLM_MASTER_KEY || "sk-1234",
   baseURL: process.env.LLM_ENDPOINT || "http://localhost:4000",
 });
@@ -41,17 +47,26 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if LiteLLM is reachable before making a request
+    // Determine which LLM client to use
+    let selectedClient = directOpenAI;
+
+    // Check if LiteLLM service is available
     try {
       await axios.get(process.env.LLM_ENDPOINT || "http://localhost:4000");
-    } catch (e) {
-      return NextResponse.json(
-        {
-          error:
-            "LiteLLM is not running. Please start it with `docker-compose up litellm db`.",
-        },
-        { status: 503 }
-      );
+      selectedClient = litellmOpenAI;
+      console.log("Using LiteLLM service");
+    } catch {
+      // Fall back to direct OpenAI
+      if (!process.env.OPENAI_API_KEY) {
+        return NextResponse.json(
+          {
+            error:
+              "No OPENAI_API_KEY found. Either set OPENAI_API_KEY or start LiteLLM service.",
+          },
+          { status: 400 }
+        );
+      }
+      console.log("Using direct OpenAI API");
     }
 
     // Check cache first
@@ -86,7 +101,7 @@ export async function POST(req: Request) {
       const timeout = setTimeout(() => controller.abort(), 60000);
 
       try {
-        completion = await openai.chat.completions.create({
+        completion = await selectedClient.chat.completions.create({
           model: process.env.LLM_MODEL || "gpt-4o",
           messages: [
             {
