@@ -203,17 +203,17 @@ export function MultiSelect({
     <div className={`relative inline-block ${className}`} ref={ref}>
       <button
         type="button"
-        className="inline-flex items-center gap-1 !px-1 !py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none"
+        className="inline-flex items-center gap-1 !px-0 !py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none"
         onClick={() => setOpen((v) => !v)}
       >
         {value.length === 0 ? placeholder : value.join(", ")}
       </button>
       {open && (
-        <div className="absolute z-50 mt-2 w-40 bg-zinc-800 text-white rounded-md shadow-md border border-white p-1 text-sm font-medium">
+        <div className="absolute z-50 mt-2 w-40 bg-white text-metabase-blue rounded-md shadow-lg border border-gray-200 p-1 text-sm font-medium">
           {options.map((opt) => (
             <label
               key={opt}
-              className="flex items-center gap-2 py-1 cursor-pointer"
+              className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 rounded px-1"
             >
               <input
                 type="checkbox"
@@ -225,7 +225,7 @@ export function MultiSelect({
                     onChange([...value, opt]);
                   }
                 }}
-                className="accent-blue-500"
+                className="accent-[#509EE3]"
               />
               <span>{opt}</span>
             </label>
