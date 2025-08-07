@@ -113,13 +113,13 @@ export default function ExportButtons({
     <div className="flex gap-6 mt-6 flex-wrap">
       <button
         onClick={() => handleExport("csv")}
-        className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+        className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50 text-sm"
       >
         Download CSV
       </button>
       <button
         onClick={() => handleExport("sql")}
-        className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+        className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50 text-sm"
       >
         Download SQL
       </button>
@@ -127,7 +127,7 @@ export default function ExportButtons({
         <button
           onClick={stopMetabase}
           disabled={isInstallingMetabase}
-          className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+          className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50 text-sm"
         >
           Stop Metabase
         </button>
@@ -135,11 +135,22 @@ export default function ExportButtons({
         <button
           onClick={startMetabase}
           disabled={isInstallingMetabase}
-          className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+          className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50 text-sm"
         >
           {isInstallingMetabase ? "Installing..." : "Explore in Metabase"}
         </button>
       )}
+      <button
+        onClick={() =>
+          window.open(
+            "https://store.metabase.com/checkout?plan=starter",
+            "_blank"
+          )
+        }
+        className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded shadow transition-colors min-w-[120px] text-sm whitespace-nowrap"
+      >
+        Try Metabase Cloud free
+      </button>
     </div>
   );
 }

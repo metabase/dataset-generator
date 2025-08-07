@@ -502,7 +502,7 @@ export default function Home() {
           </div>
           <div className="flex justify-end w-full">
             <button
-              className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50 flex items-center gap-2"
+              className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50 text-sm flex items-center gap-2"
               onClick={handlePreview}
               disabled={loading}
               type="button"
