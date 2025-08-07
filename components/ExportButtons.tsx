@@ -13,6 +13,13 @@ export default function ExportButtons({
   startMetabase,
   stopMetabase,
 }: any) {
+  // Check if running locally
+  const isLocalhost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname.includes("localhost"));
+
   const handleExport = async (type: "csv" | "sql") => {
     if (data && data.spec && prompt) {
       // Always use the in-memory spec to generate the full dataset
@@ -123,23 +130,25 @@ export default function ExportButtons({
       >
         Download SQL
       </button>
-      {isMetabaseRunning ? (
-        <button
-          onClick={stopMetabase}
-          disabled={isInstallingMetabase}
-          className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
-        >
-          Stop Metabase
-        </button>
-      ) : (
-        <button
-          onClick={startMetabase}
-          disabled={isInstallingMetabase}
-          className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
-        >
-          {isInstallingMetabase ? "Installing..." : "Explore in Metabase"}
-        </button>
-      )}
+      {/* Show Metabase buttons only if running locally */}
+      {isLocalhost &&
+        (isMetabaseRunning ? (
+          <button
+            onClick={stopMetabase}
+            disabled={isInstallingMetabase}
+            className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
+          >
+            Stop Metabase
+          </button>
+        ) : (
+          <button
+            onClick={startMetabase}
+            disabled={isInstallingMetabase}
+            className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
+          >
+            {isInstallingMetabase ? "Installing..." : "Explore in Metabase"}
+          </button>
+        ))}
       <button
         onClick={() =>
           window.open(
