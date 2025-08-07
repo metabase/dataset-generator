@@ -71,14 +71,10 @@ export default function DataTable({ data }: { data: any }) {
             ? minRows - (table.rows ? table.rows.length : 0)
             : 0;
         const tableName = table.name || `Table ${tableIndex + 1}`;
-        let suffix = "";
-        if (table.type === "fact") suffix = "_fact";
-        else if (table.type === "dim") suffix = "_dim";
         return (
           <div key={tableIndex} className="flex flex-col mb-8">
             <div className="text-sm text-gray-600 mb-2 font-medium">
               {tableName}
-              {suffix}
             </div>
             <div className="overflow-x-auto">
               <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
