@@ -94,12 +94,6 @@ export default function Home() {
     setLoading(true);
     setError("");
     setData(null);
-    const toastId = toast.loading(
-      <span className="text-sm">
-        ⌛ Hold tight while we generate a preview!
-      </span>,
-      { duration: Infinity, icon: null }
-    );
     const previewPrompt = {
       ...prompt,
       rowCount: 10,
@@ -116,14 +110,12 @@ export default function Home() {
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
       setData(result.data);
-      toast.dismiss(toastId);
       toast.success(
         <span className="text-sm">✅ Preview generated successfully!</span>,
         { icon: null }
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-      toast.dismiss(toastId);
       toast.error(
         <span className="text-sm">❌ Failed to generate dataset</span>,
         { duration: 8000, icon: null }
@@ -137,10 +129,6 @@ export default function Home() {
     setLoading(true);
     setError("");
     setData(null);
-    const toastId = toast.loading(
-      <span className="text-sm">⌛ Generating dataset...</span>,
-      { duration: Infinity, icon: null }
-    );
     const generatePrompt = {
       ...prompt,
       schemaType: prompt.schemaType === "star" ? "Star Schema" : "OBT",
@@ -154,14 +142,12 @@ export default function Home() {
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
       setData(result.data);
-      toast.dismiss(toastId);
       toast.success(
         <span className="text-sm">✅ Dataset generated successfully!</span>,
         { icon: null }
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-      toast.dismiss(toastId);
       toast.error(
         <span className="text-sm">❌ Failed to generate dataset</span>,
         { duration: 8000, icon: null }
@@ -526,38 +512,12 @@ export default function Home() {
           </div>
           <div className="flex justify-start w-full">
             <button
-              className="bg-metabase-blue hover:bg-metabase-blue-hover text-white font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm flex items-center gap-2"
+              className="bg-metabase-blue hover:bg-metabase-blue-hover text-white font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
               onClick={handlePreview}
               disabled={loading}
               type="button"
             >
-              {loading ? (
-                <>
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Generating...
-                </>
-              ) : (
-                "Preview Data"
-              )}
+              Preview Data
             </button>
           </div>
         </main>
