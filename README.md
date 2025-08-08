@@ -7,7 +7,7 @@ Features:
 - Conversational prompt builder: choose business type, schema, row count, and more
 - Real-time data preview in the browser
 - Export as CSV (single file or multi-table ZIP) or as SQL inserts
-- One-click Metabase launch for data exploration ([see Using Metabase](#using-metabase) for details)
+- One-click Metabase launch for data exploration (see [Using Metabase](#using-metabase) for details)
 
 ## Usage Flow
 
@@ -17,8 +17,9 @@ Features:
 
 ## Prerequisites
 
-- [Docker](https://www.docker.com/get-started) (includes Docker Compose)
-- At least one API key for a supported LLM provider (OpenAI, Anthropic, or Google GenAI)
+- [Node.js](https://nodejs.org/) (18 or later)
+- OpenAI API key
+- [Docker](https://www.docker.com/get-started) (optional, for Metabase and multi-provider LLM support)
 
 ## Getting Started
 
@@ -31,31 +32,17 @@ Features:
 
 2. **Create your .env file:**
 
-   Copy the example file and fill in your LLM provider API keys (OpenAI, Anthropic, Google, etc.):
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Then edit `.env` and add your API keys as needed:
+   Create a `.env` file in the project root with your OpenAI API key:
 
    ```env
-   # For local development, you can use any value for these keys:
-   LITELLM_MASTER_KEY=sk-1234
-   LITELLM_SALT_KEY=sk-1234
+   OPENAI_API_KEY=sk-your-openai-key-here
+   ```
 
-   # Add at least one provider key below:
-   OPENAI_API_KEY=sk-...
-   ANTHROPIC_API_KEY=...
-   GOOGLE_GENAI_API_KEY=...
+   Optionally, you can also set:
 
-   # Set LLM_MODEL to match your provider:
+   ```env
+   # Change the OpenAI model (defaults to gpt-4o)
    LLM_MODEL=gpt-4o
-
-   # Examples values:
-   # For OpenAI:      LLM_MODEL=gpt-4o
-   # For Anthropic:   LLM_MODEL=claude-4-sonnet
-   # For Google:      LLM_MODEL=gemini-2.5-flash
    ```
 
 3. **Start the Next.js app:**
@@ -67,27 +54,12 @@ Features:
 
    - The app runs at [http://localhost:3000](http://localhost:3000)
 
-4. **Start LiteLLM (Required for LLM Features):**
-
-   This app uses [LiteLLM](https://github.com/BerriAI/litellm) as a gateway for all LLM requests (OpenAI, Anthropic, Google, etc.).
-
-   **You must start LiteLLM for dataset generation and preview features to work.**
-
-   From your project root, run:
-
-   ```sh
-   docker compose up litellm db_litellm
-   ```
-
-   - This starts the LiteLLM gateway and its dedicated Postgres database.
-   - LiteLLM will listen on `http://localhost:4000` by default.
-
-5. **Generate a dataset:**
+4. **Generate a dataset:**
 
    - Use the prompt builder to define your dataset.
    - Click "Preview Data" to see a sample.
 
-6. **Export or Explore:**
+5. **Export or Explore:**
    - Download your dataset as CSV or SQL Inserts.
    - Click "Start Metabase" to spin up Metabase in Docker.
    - Once Metabase is ready, click "Open Metabase" to explore your data.
@@ -95,13 +67,43 @@ Features:
      - Or [connect to your own database](https://www.metabase.com/docs/latest/databases/connecting) where you've loaded the data
    - When done, click "Stop Metabase" to shut down and clean up Docker containers.
 
+## Advanced: Multi-Provider LLM Support
+
+By default, the app uses OpenAI directly. If you want to use other LLM providers (Anthropic, Google, etc.), you can optionally run the LiteLLM service:
+
+1. **Add provider keys to your .env file:**
+
+   ```env
+   # Keep your OpenAI key as fallback
+   OPENAI_API_KEY=sk-your-openai-key-here
+
+   # Add other provider keys
+   ANTHROPIC_API_KEY=your-anthropic-key-here
+   GOOGLE_GENAI_API_KEY=your-google-key-here
+
+   # LiteLLM configuration
+   LITELLM_MASTER_KEY=sk-1234
+   LITELLM_SALT_KEY=sk-1234
+
+   # Set model for your preferred provider
+   LLM_MODEL=claude-3-sonnet-20240229
+   ```
+
+2. **Start LiteLLM service:**
+
+   ```bash
+   docker compose up litellm db_litellm
+   ```
+
+When LiteLLM is running, the app automatically detects it and routes requests through the multi-provider gateway instead of directly to OpenAI.
+
 ## How It Works
 
 The dataset generator uses a two-stage process to create realistic business data. First, it leverages large language models to
 generate detailed data specifications based on your business type and parameters. Then, it uses these specifications to create
 unlimited amounts of realistic data locally.
 
-- When you preview a dataset, the app uses LiteLLM (which can route to OpenAI, Anthropic, Google, etc.) to generate a detailed data spec (schema, business rules, event logic) for your chosen business type and parameters.
+- When you preview a dataset, the app uses OpenAI (or LiteLLM if running) to generate a detailed data spec (schema, business rules, event logic) for your chosen business type and parameters.
 - All actual data rows are generated locally using Faker, based on the LLM-generated spec.
 - Downloading or exporting data never calls an LLM again—it's instant and free.
 
@@ -123,7 +125,7 @@ _The above costs and behavior are based on testing with the OpenAI GPT-4o model.
 ## Project Structure
 
 - `/app/page.tsx` – Main UI and prompt builder
-- `/app/api/generate/route.ts` – Synthetic data generator (via LiteLLM: OpenAI, Anthropic, Google, etc.)
+- `/app/api/generate/route.ts` – Synthetic data generator (OpenAI direct or via LiteLLM)
 - `/app/api/metabase/start|stop|status/route.ts` – Docker orchestration for Metabase
 - `/lib/export/` – CSV/SQL export logic
 - `/docker-compose.yml` – Used for Metabase and LiteLLM services

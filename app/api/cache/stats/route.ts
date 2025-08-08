@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { getCacheStats } from "@/lib/cache";
+import { rateLimitMiddleware } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(req: Request) {
+  // Apply rate limiting
+  const rateLimitResponse = await rateLimitMiddleware(req);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const stats = await getCacheStats();
 

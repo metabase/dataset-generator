@@ -6,6 +6,7 @@ import {
 } from "@/lib/spec-prompts";
 import { DataFactory } from "@/lib/data-factory";
 import { getCachedSpec, cacheSpec } from "@/lib/cache";
+import { rateLimitMiddleware, addRateLimitHeaders } from "@/lib/rate-limit";
 import axios from "axios";
 
 // Default OpenAI client for direct API calls
@@ -21,6 +22,12 @@ const litellmOpenAI = new OpenAI({
 
 export async function POST(req: Request) {
   const startTime = Date.now();
+
+  // Apply rate limiting
+  const rateLimitResponse = await rateLimitMiddleware(req);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
 
   try {
     const {
@@ -166,10 +173,12 @@ export async function POST(req: Request) {
         : undefined,
     };
 
-    return NextResponse.json({ data: response });
+    const nextResponse = NextResponse.json({ data: response });
+    return addRateLimitHeaders(nextResponse, req);
   } catch (error) {
     console.error("Error generating dataset:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const nextResponse = NextResponse.json({ error: message }, { status: 500 });
+    return addRateLimitHeaders(nextResponse, req);
   }
 }
