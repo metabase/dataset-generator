@@ -2,6 +2,23 @@ import React from "react";
 
 export default function DataTable({ data }: { data: any }) {
   const minRows = 10;
+
+  // Helper function to determine if a value is numeric
+  const isNumeric = (value: any) => {
+    if (typeof value === "number") return true;
+    if (typeof value === "string") {
+      // Check if it's a pure number (no letters, no special chars except decimal point)
+      const trimmed = value.trim();
+      return /^\d+(\.\d+)?$/.test(trimmed) && !isNaN(Number(trimmed));
+    }
+    return false;
+  };
+
+  // Helper function to get alignment class
+  const getAlignmentClass = (value: any) => {
+    return isNumeric(value) ? "text-right" : "text-left";
+  };
+
   if (!data || !data.tables || data.tables.length === 0) {
     return <div className="text-gray-500">No data</div>;
   }
@@ -13,9 +30,9 @@ export default function DataTable({ data }: { data: any }) {
     const emptyRows =
       minRows - table.rows.length > 0 ? minRows - table.rows.length : 0;
     return (
-      <div className="overflow-x-auto h-full flex flex-col justify-center pb-6">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-          <table className="min-w-full h-full table-fixed text-sm">
+      <div className="overflow-x-auto h-full flex flex-col justify-center pb-6 w-full">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm w-full min-w-max">
+          <table className="w-full h-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
                 {columns.map((col) => (
@@ -35,7 +52,12 @@ export default function DataTable({ data }: { data: any }) {
                   className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 >
                   {columns.map((col) => (
-                    <td key={col} className="px-4 py-3 text-metabase-subheader">
+                    <td
+                      key={col}
+                      className={`px-4 py-3 text-metabase-subheader ${getAlignmentClass(
+                        row[col]
+                      )}`}
+                    >
                       {row[col]}
                     </td>
                   ))}
@@ -77,8 +99,8 @@ export default function DataTable({ data }: { data: any }) {
               {tableName}
             </div>
             <div className="overflow-x-auto">
-              <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-                <table className="min-w-full table-fixed text-sm">
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm w-full min-w-max">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200">
                       {columns.length > 0 ? (
@@ -107,7 +129,9 @@ export default function DataTable({ data }: { data: any }) {
                           {columns.map((col) => (
                             <td
                               key={col}
-                              className="px-4 py-3 text-metabase-subheader"
+                              className={`px-4 py-3 text-metabase-subheader ${getAlignmentClass(
+                                row[col]
+                              )}`}
                             >
                               {row[col]}
                             </td>

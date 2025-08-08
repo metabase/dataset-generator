@@ -306,7 +306,7 @@ export default function Home() {
         }}
       />
       <div
-        className="bg-metabase-bg rounded-lg shadow-2xl px-4 sm:px-8 py-8 sm:py-12 w-full max-w-4xl flex flex-col"
+        className="bg-metabase-bg rounded-lg shadow-2xl px-4 sm:px-8 py-8 sm:py-12 w-full max-w-full flex flex-col"
         style={{ minHeight: "60vh" }}
       >
         <header className="mb-8">
@@ -482,33 +482,6 @@ export default function Home() {
               </SelectContent>
             </Select>{" "}
             granularity.
-            {/* <button
-              type="button"
-              aria-label="Add advanced context"
-              className={`ml-2 text-lg transition-colors ${
-                prompt.context ? "text-metabase-blue" : "text-gray-400"
-              } hover:text-metabase-blue focus:outline-none align-middle`}
-              onClick={() => setShowContext((v) => !v)}
-              title="Add additional context"
-              style={{ verticalAlign: "middle" }}
-            >
-              <span role="img" aria-label="Advanced options">
-                ...
-              </span>
-            </button>
-            {showContext && (
-              <div className="mt-4">
-                <textarea
-                  className="w-full rounded-lg bg-white text-metabase-blue px-4 py-2 text-sm border border-gray-200 focus:border-[#509EE3] focus:ring-2 focus:ring-[#509EE3] outline-none resize-vertical placeholder:text-gray-500"
-                  style={{ height: "100px" }}
-                  placeholder="Add any additional context..."
-                  value={prompt.context}
-                  onChange={(e) =>
-                    setPrompt((prev) => ({ ...prev, context: e.target.value }))
-                  }
-                />
-              </div>
-            )} */}
           </div>
           <div className="flex justify-start w-full">
             <button
