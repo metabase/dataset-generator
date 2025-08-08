@@ -45,6 +45,7 @@ export default function Home() {
   const [isMetabaseRunning, setIsMetabaseRunning] = useState(false);
   const [showContext, setShowContext] = useState(false);
   const [hasPreviewed, setHasPreviewed] = useState(false);
+  const metabaseReadyToastRef = React.useRef<string | null>(null);
 
   // Dropdown options
   const rowCountOptions = [100, 250, 500, 1000, 5000, 10000];
@@ -194,7 +195,7 @@ export default function Home() {
             setIsInstallingMetabase(false);
             setIsMetabaseRunning(true);
             toast.dismiss(toastId);
-            toast.success(
+            const metabaseReadyToast = toast.success(
               <span className="text-sm flex items-center gap-2">
                 ✅ Metabase is ready!{" "}
                 <a
@@ -222,8 +223,9 @@ export default function Home() {
                   Open Metabase
                 </a>
               </span>,
-              { duration: 15000, icon: null }
+              { duration: Infinity, icon: null } // Stays until user closes it
             );
+            metabaseReadyToastRef.current = metabaseReadyToast;
           } else {
             // Check again in 5 seconds
             setTimeout(checkStatus, 5000);
@@ -272,6 +274,13 @@ export default function Home() {
       }
       setIsMetabaseRunning(false);
       toast.dismiss(toastId);
+
+      // Dismiss the Metabase ready toast if it exists
+      if (metabaseReadyToastRef.current) {
+        toast.dismiss(metabaseReadyToastRef.current);
+        metabaseReadyToastRef.current = null;
+      }
+
       toast.success(
         <span className="text-sm">
           ✅ Dataset generator resources cleaned up.
