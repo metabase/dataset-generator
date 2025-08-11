@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { clearCache } from "@/lib/cache";
+import { rateLimitMiddleware } from "@/lib/rate-limit";
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
+  // Apply rate limiting
+  const rateLimitResponse = await rateLimitMiddleware(req);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const deletedCount = await clearCache();
 

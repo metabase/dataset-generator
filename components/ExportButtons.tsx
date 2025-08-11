@@ -13,6 +13,13 @@ export default function ExportButtons({
   startMetabase,
   stopMetabase,
 }: any) {
+  // Check if running locally
+  const isLocalhost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname.includes("localhost"));
+
   const handleExport = async (type: "csv" | "sql") => {
     if (data && data.spec && prompt) {
       // Always use the in-memory spec to generate the full dataset
@@ -113,33 +120,46 @@ export default function ExportButtons({
     <div className="flex gap-6 mt-6 flex-wrap">
       <button
         onClick={() => handleExport("csv")}
-        className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+        className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
       >
         Download CSV
       </button>
       <button
         onClick={() => handleExport("sql")}
-        className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
+        className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
       >
         Download SQL
       </button>
-      {isMetabaseRunning ? (
-        <button
-          onClick={stopMetabase}
-          disabled={isInstallingMetabase}
-          className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
-        >
-          Stop Metabase
-        </button>
-      ) : (
-        <button
-          onClick={startMetabase}
-          disabled={isInstallingMetabase}
-          className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50"
-        >
-          {isInstallingMetabase ? "Installing..." : "Explore in Metabase"}
-        </button>
-      )}
+      {/* Show Metabase buttons only if running locally */}
+      {isLocalhost &&
+        (isMetabaseRunning ? (
+          <button
+            onClick={stopMetabase}
+            disabled={isInstallingMetabase}
+            className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
+          >
+            Stop Metabase
+          </button>
+        ) : (
+          <button
+            onClick={startMetabase}
+            disabled={isInstallingMetabase}
+            className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
+          >
+            {isInstallingMetabase ? "Installing..." : "Explore in Metabase"}
+          </button>
+        ))}
+      <button
+        onClick={() =>
+          window.open(
+            "https://store.metabase.com/checkout?plan=starter",
+            "_blank"
+          )
+        }
+        className="bg-[#509EE3] hover:bg-[#6BA8E8] text-white font-medium px-6 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] text-sm whitespace-nowrap"
+      >
+        Try Metabase Cloud free
+      </button>
     </div>
   );
 }

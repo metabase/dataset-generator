@@ -45,6 +45,7 @@ export default function Home() {
   const [isMetabaseRunning, setIsMetabaseRunning] = useState(false);
   const [showContext, setShowContext] = useState(false);
   const [hasPreviewed, setHasPreviewed] = useState(false);
+  const metabaseReadyToastRef = React.useRef<string | null>(null);
 
   // Dropdown options
   const rowCountOptions = [100, 250, 500, 1000, 5000, 10000];
@@ -73,7 +74,7 @@ export default function Home() {
     prompt.growthPattern,
     prompt.variationLevel,
     prompt.granularity,
-    prompt.context,
+    // prompt.context,
   ]);
 
   const handleChange = (
@@ -94,16 +95,10 @@ export default function Home() {
     setLoading(true);
     setError("");
     setData(null);
-    const toastId = toast.loading(
-      <span className="text-sm">
-        ⌛ Hold tight while we generate a preview!
-      </span>,
-      { duration: Infinity, icon: null }
-    );
     const previewPrompt = {
       ...prompt,
       rowCount: 10,
-      context: prompt.context,
+      // context: prompt.context,
       isPreview: true,
       schemaType: prompt.schemaType === "star" ? "Star Schema" : "OBT",
     };
@@ -116,14 +111,12 @@ export default function Home() {
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
       setData(result.data);
-      toast.dismiss(toastId);
       toast.success(
         <span className="text-sm">✅ Preview generated successfully!</span>,
         { icon: null }
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-      toast.dismiss(toastId);
       toast.error(
         <span className="text-sm">❌ Failed to generate dataset</span>,
         { duration: 8000, icon: null }
@@ -137,10 +130,6 @@ export default function Home() {
     setLoading(true);
     setError("");
     setData(null);
-    const toastId = toast.loading(
-      <span className="text-sm">⌛ Generating dataset...</span>,
-      { duration: Infinity, icon: null }
-    );
     const generatePrompt = {
       ...prompt,
       schemaType: prompt.schemaType === "star" ? "Star Schema" : "OBT",
@@ -154,14 +143,12 @@ export default function Home() {
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
       setData(result.data);
-      toast.dismiss(toastId);
       toast.success(
         <span className="text-sm">✅ Dataset generated successfully!</span>,
         { icon: null }
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-      toast.dismiss(toastId);
       toast.error(
         <span className="text-sm">❌ Failed to generate dataset</span>,
         { duration: 8000, icon: null }
@@ -208,7 +195,7 @@ export default function Home() {
             setIsInstallingMetabase(false);
             setIsMetabaseRunning(true);
             toast.dismiss(toastId);
-            toast.success(
+            const metabaseReadyToast = toast.success(
               <span className="text-sm flex items-center gap-2">
                 ✅ Metabase is ready!{" "}
                 <a
@@ -236,8 +223,9 @@ export default function Home() {
                   Open Metabase
                 </a>
               </span>,
-              { duration: 15000, icon: null }
+              { duration: Infinity, icon: null } // Stays until user closes it
             );
+            metabaseReadyToastRef.current = metabaseReadyToast;
           } else {
             // Check again in 5 seconds
             setTimeout(checkStatus, 5000);
@@ -286,6 +274,13 @@ export default function Home() {
       }
       setIsMetabaseRunning(false);
       toast.dismiss(toastId);
+
+      // Dismiss the Metabase ready toast if it exists
+      if (metabaseReadyToastRef.current) {
+        toast.dismiss(metabaseReadyToastRef.current);
+        metabaseReadyToastRef.current = null;
+      }
+
       toast.success(
         <span className="text-sm">
           ✅ Dataset generator resources cleaned up.
@@ -304,34 +299,34 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-start justify-center">
+    <div className="min-h-screen bg-white flex items-start justify-center p-4 sm:p-8">
       <Toaster
         position="bottom-right"
         toastOptions={{
           style: {
-            background: "#222",
-            color: "#fff",
+            background: "#F9FBFE",
+            color: "#22242B",
             fontSize: "1rem",
-            boxShadow: "0 2px 8px #0008",
-            border: "1px solid #333",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #E1E5E9",
           },
           success: { icon: "✅" },
           error: { icon: "❌" },
         }}
       />
       <div
-        className="bg-black rounded-lg shadow-2xl px-4 sm:px-8 py-8 sm:py-12 w-full max-w-4xl flex flex-col"
+        className="bg-metabase-bg rounded-lg shadow-2xl px-4 sm:px-8 py-8 sm:py-12 w-full max-w-full flex flex-col"
         style={{ minHeight: "60vh" }}
       >
         <header className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white text-left leading-tight">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-metabase-header text-left leading-tight">
             AI Dataset
             <br />
             Generator
           </h1>
         </header>
         <main className="mb-8">
-          <div className="text-lg text-white/90 leading-relaxed text-left max-w-2xl mb-8">
+          <div className="text-lg text-metabase-subheader leading-relaxed text-left max-w-2xl mb-8">
             I want to generate a{" "}
             <Select
               value={String(prompt.rowCount)}
@@ -339,15 +334,15 @@ export default function Home() {
                 setPrompt((prev) => ({ ...prev, rowCount: Number(value) }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 text-white">
+              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
                 {rowCountOptions.map((opt) => (
                   <SelectItem
                     key={opt}
                     value={String(opt)}
-                    className="text-sm font-medium"
+                    className="text-sm font-medium hover:bg-gray-50"
                   >
                     {opt}
                   </SelectItem>
@@ -361,15 +356,15 @@ export default function Home() {
                 setPrompt((prev) => ({ ...prev, businessType: value }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 text-white">
+              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
                 {businessTypeOptions.map((opt) => (
                   <SelectItem
                     key={opt}
                     value={opt}
-                    className="text-sm font-medium"
+                    className="text-sm font-medium hover:bg-gray-50"
                   >
                     {opt}
                   </SelectItem>
@@ -383,21 +378,27 @@ export default function Home() {
                 setPrompt((prev) => ({ ...prev, schemaType: value }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 text-white">
-                <SelectItem value="OBT" className="text-sm font-medium">
+              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
+                <SelectItem
+                  value="OBT"
+                  className="text-sm font-medium hover:bg-gray-50"
+                >
                   One Big Table (OBT)
                 </SelectItem>
-                <SelectItem value="star" className="text-sm font-medium">
+                <SelectItem
+                  value="star"
+                  className="text-sm font-medium hover:bg-gray-50"
+                >
                   Multiple Tables (Star Schema)
                 </SelectItem>
               </SelectContent>
             </Select>
             , covering{" "}
             <MultiSelect
-              className="inline-block align-baseline !px-1 !py-0"
+              className="inline-block align-baseline !px-0 !py-0"
               options={timeRangeOptions}
               value={prompt.timeRange}
               onChange={(vals: string[]) =>
@@ -412,15 +413,15 @@ export default function Home() {
                 setPrompt((prev) => ({ ...prev, growthPattern: value }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 text-white">
+              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
                 {growthPatternOptions.map((opt) => (
                   <SelectItem
                     key={opt}
                     value={opt}
-                    className="text-sm font-medium"
+                    className="text-sm font-medium hover:bg-gray-50"
                   >
                     {opt}
                   </SelectItem>
@@ -434,17 +435,26 @@ export default function Home() {
                 setPrompt((prev) => ({ ...prev, variationLevel: value }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 text-white">
-                <SelectItem value="low" className="text-sm font-medium">
+              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
+                <SelectItem
+                  value="low"
+                  className="text-sm font-medium hover:bg-gray-50"
+                >
                   low
                 </SelectItem>
-                <SelectItem value="medium" className="text-sm font-medium">
+                <SelectItem
+                  value="medium"
+                  className="text-sm font-medium hover:bg-gray-50"
+                >
                   medium
                 </SelectItem>
-                <SelectItem value="high" className="text-sm font-medium">
+                <SelectItem
+                  value="high"
+                  className="text-sm font-medium hover:bg-gray-50"
+                >
                   high
                 </SelectItem>
               </SelectContent>
@@ -456,84 +466,40 @@ export default function Home() {
                 setPrompt((prev) => ({ ...prev, granularity: value }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-blue-400 underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 text-white">
-                <SelectItem value="daily" className="text-sm font-medium">
+              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
+                <SelectItem
+                  value="daily"
+                  className="text-sm font-medium hover:bg-gray-50"
+                >
                   daily
                 </SelectItem>
-                <SelectItem value="weekly" className="text-sm font-medium">
+                <SelectItem
+                  value="weekly"
+                  className="text-sm font-medium hover:bg-gray-50"
+                >
                   weekly
                 </SelectItem>
-                <SelectItem value="monthly" className="text-sm font-medium">
+                <SelectItem
+                  value="monthly"
+                  className="text-sm font-medium hover:bg-gray-50"
+                >
                   monthly
                 </SelectItem>
               </SelectContent>
             </Select>{" "}
-            granularity
-            <button
-              type="button"
-              aria-label="Add advanced context"
-              className={`ml-2 text-lg transition-colors ${
-                prompt.context ? "text-blue-400" : "text-zinc-400"
-              } hover:text-blue-400 focus:outline-none align-middle`}
-              onClick={() => setShowContext((v) => !v)}
-              title="Add additional context"
-              style={{ verticalAlign: "middle" }}
-            >
-              <span role="img" aria-label="Advanced options">
-                ...
-              </span>
-            </button>
-            {showContext && (
-              <div className="mt-4">
-                <textarea
-                  className="w-full rounded-tl-xl rounded-tr-xl rounded-bl-xl rounded-br-xl bg-zinc-800 text-white px-4 py-2 text-sm border border-zinc-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none resize-vertical placeholder:text-zinc-500"
-                  style={{ height: "100px" }}
-                  placeholder="Add any additional context..."
-                  value={prompt.context}
-                  onChange={(e) =>
-                    setPrompt((prev) => ({ ...prev, context: e.target.value }))
-                  }
-                />
-              </div>
-            )}
+            granularity.
           </div>
-          <div className="flex justify-end w-full">
+          <div className="flex justify-start w-full">
             <button
-              className="bg-zinc-200 hover:bg-zinc-300 text-black font-medium px-8 py-2 rounded shadow transition-colors min-w-[120px] disabled:opacity-50 flex items-center gap-2"
+              className="bg-metabase-blue hover:bg-metabase-blue-hover text-white font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
               onClick={handlePreview}
               disabled={loading}
               type="button"
             >
-              {loading ? (
-                <>
-                  <svg
-                    className="animate-spin h-5 w-5 text-black"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Generating...
-                </>
-              ) : (
-                "Preview Data"
-              )}
+              Preview Data
             </button>
           </div>
         </main>
@@ -541,9 +507,11 @@ export default function Home() {
           {loading && (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p className="text-white/80">Generating realistic dataset...</p>
-                <p className="text-white/60 text-sm mt-2">
+                <div className="animate-spin h-12 w-12 border-4 border-[#509EE3] border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-metabase-subheader">
+                  Generating realistic dataset...
+                </p>
+                <p className="text-gray-500 text-sm mt-2">
                   This may take a few moments
                 </p>
               </div>
@@ -571,7 +539,7 @@ export default function Home() {
           {!loading &&
           hasPreviewed &&
           (!data || !data.tables || data.tables.length === 0) ? (
-            <div className="text-gray-400">No data</div>
+            <div className="text-gray-500">No data</div>
           ) : null}
         </section>
       </div>

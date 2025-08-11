@@ -7,33 +7,41 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:cache": "tsx scripts/test-cache.ts",
+    "test:schemas": "tsx scripts/validate-schemas.ts",
+    "test:api-cache": "tsx scripts/test-api-cache.ts",
+    "test:rate-limit": "tsx scripts/test-rate-limit.ts",
+    "test:all": "npm run test:cache && npm run test:schemas && npm run test:api-cache && npm run test:rate-limit"
   },
   "dependencies": {
     "@faker-js/faker": "^9.8.0",
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",
+    "axios": "^1.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.1",
     "jszip": "^3.10.1",
+    "limiter": "^3.0.0",
     "lucide-react": "^0.515.0",
     "next": "15.3.3",
     "openai": "^5.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
-    "tailwind-merge": "^3.3.1",
-    "axios": "^1.6.0"
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
     "eslint": "9.29.0",
     "eslint-config-next": "15.3.4",
-    "postcss": "^8.5.5",
-    "tailwindcss": "^4.1.10",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

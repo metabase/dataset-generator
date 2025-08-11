@@ -1,35 +1,41 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Add any custom global styles below this line */
 
 .toaster > * {
-  background: #222 !important;
-  color: #fff !important;
+  background: #f9fbfe !important;
+  color: #22242b !important;
   border-radius: 0.5rem !important;
-  box-shadow: 0 2px 16px 0 #0006 !important;
+  box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e1e5e9 !important;
 }
 
 @media (prefers-color-scheme: light) {
   .toaster > * {
-    background: #fff !important;
-    color: #222 !important;
-    box-shadow: 0 2px 16px 0 #0002 !important;
+    background: #f9fbfe !important;
+    color: #22242b !important;
+    box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e1e5e9 !important;
   }
 }
 
 [data-sonner-toast],
 [data-sonner-toast] * {
-  background: #222 !important;
-  color: #fff !important;
+  background: #f9fbfe !important;
+  color: #22242b !important;
   border-radius: 0.5rem !important;
-  box-shadow: 0 2px 16px 0 #0006 !important;
+  box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e1e5e9 !important;
 }
 
 @media (prefers-color-scheme: light) {
   [data-sonner-toast],
   [data-sonner-toast] * {
-    background: #fff !important;
-    color: #222 !important;
-    box-shadow: 0 2px 16px 0 #0002 !important;
+    background: #f9fbfe !important;
+    color: #22242b !important;
+    box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e1e5e9 !important;
   }
 }
