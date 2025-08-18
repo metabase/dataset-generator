@@ -11,7 +11,7 @@ export default function ExportButtons({
   isMetabaseRunning,
   isInstallingMetabase,
   startMetabase,
-  stopMetabase,
+  stopMetabase
 }: any) {
   // Check if running locally
   const isLocalhost =
@@ -42,7 +42,7 @@ export default function ExportButtons({
         if (prompt.schemaType === "star" && type === "csv") {
           // Use JSZip to zip multiple CSVs
           const zip = new JSZip();
-          allTables.forEach((table) => {
+          allTables.forEach(table => {
             const csv = toCSV(table.rows, table.name);
             zip.file(`${table.name}.csv`, csv);
           });
@@ -63,11 +63,11 @@ export default function ExportButtons({
           if (prompt.schemaType === "star") {
             if (type === "sql") {
               content = allTables
-                .map((table) => toSQL(table.rows, table.name))
+                .map(table => toSQL(table.rows, table.name))
                 .join("\n\n");
             } else {
               content = allTables
-                .map((table) => toCSV(table.rows, table.name))
+                .map(table => toCSV(table.rows, table.name))
                 .join("\n\n");
             }
           } else {
@@ -79,7 +79,7 @@ export default function ExportButtons({
             }
           }
           const blob = new Blob([content], {
-            type: type === "csv" ? "text/csv" : "text/plain",
+            type: type === "csv" ? "text/csv" : "text/plain"
           });
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -95,7 +95,7 @@ export default function ExportButtons({
             { icon: null }
           );
         }
-      } catch (err) {
+      } catch {
         toast.dismiss(toastId);
         toast.error(
           <span className="text-sm">

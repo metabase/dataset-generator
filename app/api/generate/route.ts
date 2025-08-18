@@ -34,7 +34,6 @@ export async function POST(req: Request) {
       businessType,
       rowCount,
       context,
-      isPreview,
       timeRange,
       growthPattern,
       variationLevel,
@@ -42,7 +41,6 @@ export async function POST(req: Request) {
       schemaType,
     }: GenerateSpecPromptParams & {
       rowCount: number;
-      isPreview?: boolean;
       schemaType?: string;
     } = await req.json();
 

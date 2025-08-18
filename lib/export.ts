@@ -1,4 +1,4 @@
-export function toCSV(rows: any[], tableName?: string) {
+export function toCSV(rows: any[]) {
   if (!rows || !rows.length) return "";
   const columns = Object.keys(rows[0]);
   const header = columns.join(",");

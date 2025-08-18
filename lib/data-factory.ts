@@ -182,7 +182,7 @@ export class DataFactory {
     });
 
     // Validate simulation events
-    Object.entries(spec.simulation.events).forEach(([eventName, eventSpec]) => {
+    Object.entries(spec.simulation.events).forEach(([, eventSpec]) => {
       if (!eventSpec.type) {
         eventSpec.type = "random";
       }
@@ -222,9 +222,6 @@ export class DataFactory {
       rowCount,
       timeRange
     );
-
-    // Validate data quality
-    const qualityReport = this.validateDataQuality(eventStream);
 
     // Format as table
     const table = this.formatAsTable(eventStream);
@@ -380,7 +377,7 @@ export class DataFactory {
           .map((attr) => `${attr}=${context[attr]}`)
           .sort()
           .join(" & ");
-        let val =
+        const val =
           spec.cases[key] ??
           spec.cases[context[spec.on[0]]] ??
           spec.cases["default"];
@@ -688,8 +685,7 @@ export class DataFactory {
               );
             }
             record[colSpec.name] = this.generateFallbackForColumn(
-              colSpec.name,
-              record
+              colSpec.name
             );
           }
           break;
@@ -717,7 +713,6 @@ export class DataFactory {
             }
             record[colSpec.name] = this.generateFallbackForColumn(
               colSpec.name,
-              record
             );
           } else {
             record[colSpec.name] = refValue;
@@ -749,8 +744,7 @@ export class DataFactory {
                 refValue === ""
               ) {
                 record[colSpec.name] = this.generateFallbackForColumn(
-                  colSpec.name,
-                  record
+                  colSpec.name
                 );
               } else {
                 record[colSpec.name] = refValue;
@@ -759,14 +753,12 @@ export class DataFactory {
               record[colSpec.name] = outputSpec.value;
             } else {
               record[colSpec.name] = this.generateFallbackForColumn(
-                colSpec.name,
-                record
+                colSpec.name
               );
             }
           } else {
             record[colSpec.name] = this.generateFallbackForColumn(
-              colSpec.name,
-              record
+              colSpec.name
             );
           }
           break;
@@ -828,8 +820,7 @@ export class DataFactory {
           break;
         default:
           record[colSpec.name] = this.generateFallbackForColumn(
-            colSpec.name,
-            record
+            colSpec.name
           );
       }
     });
@@ -1189,7 +1180,6 @@ export class DataFactory {
 
   private generateFallbackForColumn(
     columnName: string,
-    row?: Record<string, any>
   ): any {
     // Generate realistic fallback data based on column name
     const lowerName = columnName.toLowerCase();
@@ -1369,7 +1359,7 @@ export class DataFactory {
         columns: Object.keys(entityList[0] || {}).filter(
           (key) => !key.startsWith("_")
         ),
-        rows: entityList.map(({ _createdAt, _isActive, ...attrs }) => attrs),
+        rows: entityList.map(({ ...attrs }) => attrs),
       };
     });
   }

@@ -3,7 +3,7 @@
 const businessTypeInstructions: Record<string, string> = {
   "B2B SaaS": `
     **CRITICAL: B2B SaaS Business Model Requirements**
-    - **Pricing Structure**: 
+    - **Pricing Structure**:
       - Starter: $50-199/month (small teams, 1-10 users)
       - Professional: $200-999/month (growing companies, 10-100 users)
       - Enterprise: $1000-5000+/month (large organizations, 100+ users)
@@ -39,7 +39,7 @@ const businessTypeInstructions: Record<string, string> = {
   `,
   "B2C SaaS": `
     **CRITICAL: B2C SaaS Business Model Requirements**
-    - **Pricing Structure**: 
+    - **Pricing Structure**:
       - Free tier: $0 (freemium model, limited features)
       - Basic tier: $5-19/month (individual users, core features)
       - Premium tier: $20-49/month (power users, advanced features)
@@ -276,7 +276,7 @@ const businessTypeInstructions: Record<string, string> = {
     - **Industry-Specific Metrics**: Include KPIs relevant to the business domain
     - **Logical Relationships**: Ensure all data relationships make business sense
     - **Analyst-Friendly Context**: Provide rich context for slicing and dicing data
-  `,
+  `
 };
 
 export interface GenerateSpecPromptParams {
@@ -292,12 +292,11 @@ export interface GenerateSpecPromptParams {
 export function generateSpecPrompt(params: GenerateSpecPromptParams) {
   const {
     businessType,
-    context,
     timeRange,
     growthPattern,
     variationLevel,
     granularity,
-    schemaType,
+    schemaType
   } = params;
 
   const selectedInstructions =
@@ -359,7 +358,7 @@ export function generateSpecPrompt(params: GenerateSpecPromptParams) {
 
 **CRITICAL: Use correct faker method names:**
 - For names: use "person.fullName" (not "person.name")
-- For emails: use "internet.email" (not "email") 
+- For emails: use "internet.email" (not "email")
 - For product names: use "commerce.productName" (not "commerce.product_name")
 - For prices: use "commerce.price" (not "commerce.price")
 - For categories: use "commerce.department" (not "commerce.category")
