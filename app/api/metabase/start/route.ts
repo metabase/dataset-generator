@@ -9,7 +9,7 @@ export async function POST() {
     // Check if Docker is running
     try {
       await execAsync("docker info");
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: "Docker is not running. Please start Docker and try again." },
         { status: 400 }
@@ -23,7 +23,7 @@ export async function POST() {
     if (runningContainers.includes("dataset_generator_metabase")) {
       return NextResponse.json({
         message: "Metabase is already running",
-        url: "http://localhost:3001",
+        url: "http://localhost:3001"
       });
     }
 
@@ -32,9 +32,9 @@ export async function POST() {
 
     return NextResponse.json({
       message: "Metabase is starting",
-      url: "http://localhost:3001",
+      url: "http://localhost:3001"
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error starting Metabase:", error);
     return NextResponse.json(
       { error: error.stderr || error.message || "Failed to start Metabase" },

@@ -18,7 +18,7 @@ export async function GET() {
     ) {
       return NextResponse.json({
         ready: false,
-        message: "Containers are not running",
+        message: "Containers are not running"
       });
     }
 
@@ -32,14 +32,14 @@ export async function GET() {
       } else {
         return NextResponse.json({
           ready: false,
-          message: "Metabase is still initializing",
+          message: "Metabase is still initializing"
         });
       }
-    } catch (error) {
+    } catch {
       // Metabase is still starting up
       return NextResponse.json({
         ready: false,
-        message: "Metabase is starting up",
+        message: "Metabase is starting up"
       });
     }
   } catch (error) {
