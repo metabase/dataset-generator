@@ -8,8 +8,9 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
-  MultiSelect
+  MultiSelect,
 } from "@/components/ui/select";
+import { ChevronDownIcon } from "lucide-react";
 import DataTable from "@/components/DataTable";
 import ExportButtons from "@/components/ExportButtons";
 import { toCSV, toSQL } from "@/lib/export";
@@ -36,7 +37,7 @@ export default function Home() {
     growthPattern: "steady",
     variationLevel: "medium",
     granularity: "daily",
-    context: ""
+    context: "",
   });
   const [data, setData] = useState<any>(undefined);
   const [loading, setLoading] = useState(false);
@@ -57,32 +58,30 @@ export default function Home() {
     "Education",
     "Retail",
     "Manufacturing",
-    "Transportation"
+    "Transportation",
   ];
   const timeRangeOptions = ["2023", "2024", "2025"];
   const growthPatternOptions = ["steady", "spike", "decline"];
 
   // Extract computed dep to satisfy react-hooks/exhaustive-deps
-  const timeRangeKey = useMemo(() => prompt.timeRange.join(","), [
-    prompt.timeRange
-  ]);
-
-  useEffect(
-    () => {
-      setData(null);
-      setHasPreviewed(false);
-    },
-    [
-      prompt.schemaType,
-      prompt.businessType,
-      prompt.rowCount,
-      timeRangeKey,
-      prompt.growthPattern,
-      prompt.variationLevel,
-      prompt.granularity
-      // prompt.context,
-    ]
+  const timeRangeKey = useMemo(
+    () => prompt.timeRange.join(","),
+    [prompt.timeRange]
   );
+
+  useEffect(() => {
+    setData(null);
+    setHasPreviewed(false);
+  }, [
+    prompt.schemaType,
+    prompt.businessType,
+    prompt.rowCount,
+    timeRangeKey,
+    prompt.growthPattern,
+    prompt.variationLevel,
+    prompt.granularity,
+    // prompt.context,
+  ]);
 
   const handlePreview = async () => {
     setHasPreviewed(true);
@@ -94,13 +93,13 @@ export default function Home() {
       rowCount: 10,
       // context: prompt.context,
       isPreview: true,
-      schemaType: prompt.schemaType === "star" ? "Star Schema" : "OBT"
+      schemaType: prompt.schemaType === "star" ? "Star Schema" : "OBT",
     };
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(previewPrompt) // Always preview 10 rows
+        body: JSON.stringify(previewPrompt), // Always preview 10 rows
       });
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
@@ -131,7 +130,7 @@ export default function Home() {
     );
     try {
       const response = await fetch("/api/metabase/start", {
-        method: "POST"
+        method: "POST",
       });
       if (!response.ok) {
         const err = await response.json();
@@ -174,12 +173,12 @@ export default function Home() {
                     fontWeight: 600,
                     textDecoration: "none",
                     display: "inline-block",
-                    marginLeft: "8px"
+                    marginLeft: "8px",
                   }}
-                  onMouseOver={e =>
+                  onMouseOver={(e) =>
                     (e.currentTarget.style.backgroundColor = "#6BA8E8")
                   }
-                  onMouseOut={e =>
+                  onMouseOut={(e) =>
                     (e.currentTarget.style.backgroundColor = "#509EE3")
                   }
                 >
@@ -271,10 +270,10 @@ export default function Home() {
             color: "#22242B",
             fontSize: "1rem",
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-            border: "1px solid #E1E5E9"
+            border: "1px solid #E1E5E9",
           },
           success: { icon: "✅" },
-          error: { icon: "❌" }
+          error: { icon: "❌" },
         }}
       />
       <div
@@ -283,25 +282,24 @@ export default function Home() {
       >
         <header className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-metabase-header text-left leading-tight">
-            AI Dataset
-            <br />
-            Generator
+            AI Dataset Generator
           </h1>
         </header>
         <main className="mb-8">
-          <div className="text-lg text-metabase-subheader leading-relaxed text-left max-w-2xl mb-8">
+          <div className="text-lg text-metabase-subheader leading-loose text-left max-w-2xl mb-8">
             I want to generate a{" "}
             <Select
               value={String(prompt.rowCount)}
-              onValueChange={value =>
-                setPrompt(prev => ({ ...prev, rowCount: Number(value) }))
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, rowCount: Number(value) }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
                 <SelectValue />
+                <ChevronDownIcon className="text-metabase-blue size-4" />
               </SelectTrigger>
               <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
-                {rowCountOptions.map(opt => (
+                {rowCountOptions.map((opt) => (
                   <SelectItem
                     key={opt}
                     value={String(opt)}
@@ -315,15 +313,16 @@ export default function Home() {
             row dataset for a{" "}
             <Select
               value={prompt.businessType}
-              onValueChange={value =>
-                setPrompt(prev => ({ ...prev, businessType: value }))
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, businessType: value }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
                 <SelectValue />
+                <ChevronDownIcon className="text-metabase-blue size-4" />
               </SelectTrigger>
               <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
-                {businessTypeOptions.map(opt => (
+                {businessTypeOptions.map((opt) => (
                   <SelectItem
                     key={opt}
                     value={opt}
@@ -337,12 +336,13 @@ export default function Home() {
             business, using{" "}
             <Select
               value={prompt.schemaType}
-              onValueChange={value =>
-                setPrompt(prev => ({ ...prev, schemaType: value }))
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, schemaType: value }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
                 <SelectValue />
+                <ChevronDownIcon className="text-metabase-blue size-4" />
               </SelectTrigger>
               <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
                 <SelectItem
@@ -365,22 +365,23 @@ export default function Home() {
               options={timeRangeOptions}
               value={prompt.timeRange}
               onChange={(vals: string[]) =>
-                setPrompt(prev => ({ ...prev, timeRange: vals }))
+                setPrompt((prev) => ({ ...prev, timeRange: vals }))
               }
               placeholder="Select year(s)"
             />{" "}
             with{" "}
             <Select
               value={prompt.growthPattern}
-              onValueChange={value =>
-                setPrompt(prev => ({ ...prev, growthPattern: value }))
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, growthPattern: value }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
                 <SelectValue />
+                <ChevronDownIcon className="text-metabase-blue size-4" />
               </SelectTrigger>
               <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
-                {growthPatternOptions.map(opt => (
+                {growthPatternOptions.map((opt) => (
                   <SelectItem
                     key={opt}
                     value={opt}
@@ -394,12 +395,13 @@ export default function Home() {
             growth,{" "}
             <Select
               value={prompt.variationLevel}
-              onValueChange={value =>
-                setPrompt(prev => ({ ...prev, variationLevel: value }))
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, variationLevel: value }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
                 <SelectValue />
+                <ChevronDownIcon className="text-metabase-blue size-4" />
               </SelectTrigger>
               <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
                 <SelectItem
@@ -425,12 +427,13 @@ export default function Home() {
             variation, and{" "}
             <Select
               value={prompt.granularity}
-              onValueChange={value =>
-                setPrompt(prev => ({ ...prev, granularity: value }))
+              onValueChange={(value) =>
+                setPrompt((prev) => ({ ...prev, granularity: value }))
               }
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none focus-visible:border-0 [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-5 [&_[data-slot=select-value]]:text-metabase-blue">
+              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
                 <SelectValue />
+                <ChevronDownIcon className="text-metabase-blue size-4" />
               </SelectTrigger>
               <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
                 <SelectItem

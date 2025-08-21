@@ -203,10 +203,11 @@ export function MultiSelect({
     <div className={`relative inline-block ${className}`} ref={ref}>
       <button
         type="button"
-        className="inline-flex items-center gap-1 !px-0 !py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue underline underline-offset-2 font-medium text-lg align-baseline focus:ring-0 focus:outline-none focus:shadow-none"
+        className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue"
         onClick={() => setOpen((v) => !v)}
       >
         {value.length === 0 ? placeholder : value.join(", ")}
+        <ChevronDownIcon className="text-metabase-blue size-4" />
       </button>
       {open && (
         <div className="absolute z-50 mt-2 w-40 bg-white text-metabase-blue rounded-md shadow-lg border border-gray-200 p-1 text-sm font-medium">
@@ -225,7 +226,12 @@ export function MultiSelect({
                     onChange([...value, opt]);
                   }
                 }}
-                className="accent-[#509EE3]"
+                className="w-4 h-4 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 checked:bg-white checked:border-gray-300"
+                style={{
+                  backgroundImage: value.includes(opt)
+                    ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%23509EE3' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m9.5 12.5-5-5 1.4-1.4 3.6 3.6 7.6-7.6 1.4 1.4z'/%3e%3c/svg%3e")`
+                    : "none",
+                }}
               />
               <span>{opt}</span>
             </label>
