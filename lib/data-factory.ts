@@ -5,6 +5,7 @@ import { TableFormatter } from "@/lib/formatters/table-formatter";
 import { DataValidator } from "@/lib/validators/data-validator";
 import { DataEnforcer } from "@/lib/enforcers/data-enforcer";
 import { SaaSEnforcer } from "@/lib/enforcers/saas-enforcer";
+import { faker } from "@/lib/utils/faker-utils";
 
 // =================================================================
 // DATA FACTORY IMPLEMENTATION
@@ -205,9 +206,9 @@ export class DataFactory {
       };
 
       // Generate dimension records for each required ID
-      ids.forEach((id) => {
+      for (const id of ids) {
         const record: any = {};
-        dimensionTable.columns.forEach((col) => {
+        for (const col of dimensionTable.columns) {
           if (col === foreignKeyName) {
             record[col] = id; // Use the exact ID from the fact table
           } else {
@@ -215,9 +216,9 @@ export class DataFactory {
             const attrSpec = entitySpec.attributes[col];
             record[col] = this.generateAttributeValue(attrSpec);
           }
-        });
+        }
         dimensionTable.rows.push(record);
-      });
+      }
 
       dimensionTables.push(dimensionTable);
     });
@@ -230,9 +231,8 @@ export class DataFactory {
     if (attrSpec.type === "faker") {
       const [namespace, method] = attrSpec.method!.split(".");
       try {
-        const faker = require("@faker-js/faker").faker;
         return (faker as any)[namespace][method]();
-      } catch (error) {
+      } catch {
         return this.generateDefaultValue(method);
       }
     } else if (attrSpec.type === "choice") {
