@@ -30,19 +30,20 @@ export async function POST(req: Request) {
   }
 
   try {
+    const body = await req.json();
     const {
       businessType,
-      rowCount,
+      numRecords,
       context,
       timeRange,
       growthPattern,
       variationLevel,
       granularity,
       schemaType,
-    }: GenerateSpecPromptParams & {
-      rowCount: number;
-      schemaType?: string;
-    } = await req.json();
+    } = body;
+
+    // Handle both numRecords and rowCount for backward compatibility
+    const rowCount = numRecords || body.rowCount;
 
     // Validate required fields
     if (!businessType) {
@@ -86,8 +87,8 @@ export async function POST(req: Request) {
     };
 
     const cachedSpec = await getCachedSpec(cacheParams);
-    let spec: any;
-    let completion: any = null;
+    let spec: any; // Keep as any for LLM-generated spec
+    let completion: any = null; // Keep as any for OpenAI response
 
     if (cachedSpec) {
       // Use cached spec - no LLM call needed
@@ -96,14 +97,11 @@ export async function POST(req: Request) {
       console.log(`Tokens Used: Free (cached result) - ${duration}ms`);
     } else {
       // Cache miss - generate new spec with LLM
-      console.log(`Generating new spec...`);
-
-      // 1. Generate the spec from the LLM
       const prompt = generateSpecPrompt(cacheParams);
 
-      // LiteLLM timeout (60s)
+      // LiteLLM timeout (90s)
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 60000);
+      const timeout = setTimeout(() => controller.abort(), 90000);
 
       try {
         completion = await selectedClient.chat.completions.create({
@@ -150,9 +148,13 @@ export async function POST(req: Request) {
     }
 
     // 2. Generate data using the spec (same for both cached and new specs)
+    console.log("🔍 API Debug: rowCount:", rowCount);
+    console.log("🔍 API Debug: timeRange:", timeRange);
+    console.log("🔍 API Debug: schemaType:", schemaType);
+
     const factory = new DataFactory(spec);
     const generatedData = factory.generate(
-      rowCount || 1000,
+      rowCount,
       timeRange || [new Date().getFullYear().toString()],
       schemaType
     );
