@@ -2,6 +2,7 @@ import React from "react";
 import toast, { Toaster } from "react-hot-toast";
 import JSZip from "jszip";
 import { DataFactory } from "@/lib/data-factory";
+import { ExportData } from "@/lib/types/data-types";
 
 export default function ExportButtons({
   data,
@@ -11,8 +12,8 @@ export default function ExportButtons({
   isMetabaseRunning,
   isInstallingMetabase,
   startMetabase,
-  stopMetabase
-}: any) {
+  stopMetabase,
+}: ExportData) {
   // Check if running locally
   const isLocalhost =
     typeof window !== "undefined" &&
@@ -42,7 +43,7 @@ export default function ExportButtons({
         if (prompt.schemaType === "star" && type === "csv") {
           // Use JSZip to zip multiple CSVs
           const zip = new JSZip();
-          allTables.forEach(table => {
+          allTables.forEach((table) => {
             const csv = toCSV(table.rows, table.name);
             zip.file(`${table.name}.csv`, csv);
           });
@@ -63,11 +64,11 @@ export default function ExportButtons({
           if (prompt.schemaType === "star") {
             if (type === "sql") {
               content = allTables
-                .map(table => toSQL(table.rows, table.name))
+                .map((table) => toSQL(table.rows, table.name))
                 .join("\n\n");
             } else {
               content = allTables
-                .map(table => toCSV(table.rows, table.name))
+                .map((table) => toCSV(table.rows, table.name))
                 .join("\n\n");
             }
           } else {
@@ -79,7 +80,7 @@ export default function ExportButtons({
             }
           }
           const blob = new Blob([content], {
-            type: type === "csv" ? "text/csv" : "text/plain"
+            type: type === "csv" ? "text/csv" : "text/plain",
           });
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
