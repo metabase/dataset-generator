@@ -9,6 +9,8 @@ Features:
 - Export as CSV (single file or multi-table ZIP) or as SQL inserts
 - One-click Metabase launch for data exploration (see [Using Metabase](#using-metabase) for details)
 
+**Local vs Web:** When running locally, you can spin up Metabase in Docker and use LiteLLM for multi-provider LLM support. On the web, the app defaults to OpenAI and redirects to Metabase Cloud for data exploration.
+
 ## Usage Flow
 
 1. Select your business type, schema, and other parameters.
@@ -135,6 +137,7 @@ _The above costs and behavior are based on testing with the OpenAI GPT-4o model.
 - **Next.js** (App Router, TypeScript)
 - **Tailwind CSS + ShadCN UI** (modern, dark-themed UI)
 - **LiteLLM** (multi-provider LLM gateway: OpenAI, Anthropic, Google, etc.)
+- **Faker.js** (realistic data generation)
 - **Metabase** (Dockerized, launched on demand)
 
 ## Extending/Contributing
