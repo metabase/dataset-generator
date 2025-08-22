@@ -1,7 +1,7 @@
 import "dotenv/config";
 import axios from "axios";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://localhost:3001";
 
 async function testRateLimit() {
   console.log("🧪 Testing Rate Limiting...\n");
