@@ -466,7 +466,7 @@ export default function Home() {
               disabled={loading}
               type="button"
             >
-              Preview Data
+              Generate Data
             </button>
           </div>
         </main>
