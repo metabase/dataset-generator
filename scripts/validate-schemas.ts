@@ -245,8 +245,9 @@ class SchemaValidator {
     errors: string[],
     warnings: string[]
   ): any {
+    // New refactored format: data.tables[0] contains the main table
     const mainTable =
-      schemaType === "Star Schema" ? data.fact_table : data.table;
+      data.tables && data.tables[0] ? data.tables[0].rows : null;
 
     if (!mainTable || !Array.isArray(mainTable)) {
       errors.push("No main table data generated");

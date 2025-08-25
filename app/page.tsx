@@ -15,6 +15,7 @@ import DataTable from "@/components/DataTable";
 import ExportButtons from "@/components/ExportButtons";
 import { toCSV, toSQL } from "@/lib/export";
 import toast, { Toaster } from "react-hot-toast";
+import { GeneratedData } from "@/lib/types/data-types";
 
 interface Prompt {
   rowCount: number;
@@ -39,7 +40,7 @@ export default function Home() {
     granularity: "daily",
     context: "",
   });
-  const [data, setData] = useState<any>(undefined);
+  const [data, setData] = useState<GeneratedData | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const setError = useState<string>("")[1];
   const [isInstallingMetabase, setIsInstallingMetabase] = useState(false);
@@ -465,7 +466,7 @@ export default function Home() {
               disabled={loading}
               type="button"
             >
-              Preview Data
+              Generate Data
             </button>
           </div>
         </main>

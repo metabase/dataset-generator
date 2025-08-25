@@ -17,7 +17,7 @@ class DataQualityValidator {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = "http://localhost:3000";
+    this.baseUrl = "http://localhost:3001";
   }
 
   async validateAllBusinessTypes(): Promise<void> {
@@ -92,7 +92,7 @@ class DataQualityValidator {
 
     const response = await axios.post(`${this.baseUrl}/api/generate`, payload, {
       headers: { "Content-Type": "application/json" },
-      timeout: 60000,
+      timeout: 90000,
     });
 
     const data = response.data.data;

@@ -1,4 +1,6 @@
-export function toCSV(rows: any[]) {
+import { DataRecord } from "@/lib/types/data-types";
+
+export function toCSV(rows: DataRecord[]) {
   if (!rows || !rows.length) return "";
   const columns = Object.keys(rows[0]);
   const header = columns.join(",");
@@ -10,7 +12,7 @@ export function toCSV(rows: any[]) {
   return header + "\n" + body;
 }
 
-export function toSQL(rows: any[], tableName = "dataset") {
+export function toSQL(rows: DataRecord[], tableName = "dataset") {
   if (!rows || !rows.length) return "";
   const columns = Object.keys(rows[0]);
   // Guess types (very basic)
