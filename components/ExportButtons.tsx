@@ -150,6 +150,7 @@ export default function ExportButtons({
             {isInstallingMetabase ? "Installing..." : "Explore in Metabase"}
           </button>
         ))}
+      {/* Temporarily commented out - might re-enable for later
       <button
         onClick={() =>
           window.open(
@@ -161,6 +162,7 @@ export default function ExportButtons({
       >
         Try Metabase Cloud free
       </button>
+      */}
     </div>
   );
 }
