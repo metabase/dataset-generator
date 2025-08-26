@@ -1,10 +1,11 @@
 import React from "react";
+import { GeneratedData, DataRecord } from "@/lib/types/data-types";
 
-export default function DataTable({ data }: { data: any }) {
+export default function DataTable({ data }: { data: GeneratedData }) {
   const minRows = 10;
 
   // Helper function to determine if a value is numeric
-  const isNumeric = (value: any) => {
+  const isNumeric = (value: string | number | boolean | null | undefined) => {
     if (typeof value === "number") return true;
     if (typeof value === "string") {
       // Check if it's a pure number (no letters, no special chars except decimal point)
@@ -15,7 +16,9 @@ export default function DataTable({ data }: { data: any }) {
   };
 
   // Helper function to get alignment class
-  const getAlignmentClass = (value: any) => {
+  const getAlignmentClass = (
+    value: string | number | boolean | null | undefined
+  ) => {
     return isNumeric(value) ? "text-right" : "text-left";
   };
 
@@ -46,7 +49,7 @@ export default function DataTable({ data }: { data: any }) {
               </tr>
             </thead>
             <tbody className="h-full">
-              {table.rows.map((row: any, i: number) => (
+              {table.rows.map((row: DataRecord, i: number) => (
                 <tr
                   key={i}
                   className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
@@ -83,7 +86,7 @@ export default function DataTable({ data }: { data: any }) {
   }
   return (
     <div>
-      {data.tables.map((table: any, tableIndex: number) => {
+      {data.tables.map((table, tableIndex: number) => {
         const columns =
           Array.isArray(table.rows) && table.rows.length > 0
             ? Object.keys(table.rows[0])
@@ -121,7 +124,7 @@ export default function DataTable({ data }: { data: any }) {
                   </thead>
                   <tbody>
                     {Array.isArray(table.rows) && table.rows.length > 0 ? (
-                      table.rows.map((row: any, i: number) => (
+                      table.rows.map((row: DataRecord, i: number) => (
                         <tr
                           key={i}
                           className="border-b border-gray-100 hover:bg-gray-50 transition-colors"

@@ -21,11 +21,10 @@ export async function POST() {
       message:
         "Dataset generator containers, volumes, and images stopped and removed",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error stopping containers:", error);
-    return NextResponse.json(
-      { error: error.stderr || error.message || "Failed to stop containers" },
-      { status: 500 }
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to stop containers";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
