@@ -150,19 +150,6 @@ export default function ExportButtons({
             {isInstallingMetabase ? "Installing..." : "Explore in Metabase"}
           </button>
         ))}
-      {/* Temporarily commented out - might re-enable for later
-      <button
-        onClick={() =>
-          window.open(
-            "https://store.metabase.com/checkout?plan=starter",
-            "_blank"
-          )
-        }
-        className="bg-[#509EE3] hover:bg-[#6BA8E8] text-white font-medium px-6 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] text-sm whitespace-nowrap"
-      >
-        Try Metabase Cloud free
-      </button>
-      */}
     </div>
   );
 }
