@@ -26,11 +26,9 @@ export class TableFormatter {
     let name = tableSpec.name;
     if (name.endsWith("_fact_fact")) name = name.replace("_fact_fact", "_fact");
     if (name.endsWith("_dim_dim")) name = name.replace("_dim_dim", "_dim");
-    if (name.endsWith("_fact") || name.endsWith("_dim")) {
-      // do nothing
-    } else {
-      name += "_fact";
-    }
+if (!name.endsWith("_fact") && !name.endsWith("_dim")) {
+  name += "_fact";
+}
     return {
       name,
       type: name.endsWith("_dim") ? "dim" : "fact",
