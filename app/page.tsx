@@ -46,6 +46,7 @@ export default function Home() {
   const [isInstallingMetabase, setIsInstallingMetabase] = useState(false);
   const [isMetabaseRunning, setIsMetabaseRunning] = useState(false);
   const [hasPreviewed, setHasPreviewed] = useState(false);
+  const [canGenerate, setCanGenerate] = useState(true);
   const metabaseReadyToastRef = useRef<string | null>(null);
 
   // Dropdown options
@@ -73,6 +74,7 @@ export default function Home() {
   useEffect(() => {
     setData(null);
     setHasPreviewed(false);
+    setCanGenerate(true);
   }, [
     prompt.schemaType,
     prompt.businessType,
@@ -105,6 +107,7 @@ export default function Home() {
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
       setData(result.data);
+      setCanGenerate(false);
       toast.success(
         <span className="text-sm">✅ Preview generated successfully!</span>,
         { icon: null }
@@ -262,7 +265,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-start justify-center p-4 sm:p-8">
+    <div className="min-h-screen bg-white flex flex-col items-center p-4 sm:p-8 gap-6">
       <Toaster
         position="bottom-right"
         toastOptions={{
@@ -277,200 +280,440 @@ export default function Home() {
           error: { icon: "❌" },
         }}
       />
+
+      {/* Header */}
+      <header className="w-full" style={{ width: "min(864px, 100% - 32px)" }}>
+        <h1
+          className="text-left"
+          style={{
+            fontFamily: "Lato",
+            fontWeight: 900,
+            fontSize: "36px",
+            lineHeight: "40px",
+            letterSpacing: "0%",
+            color: "#22242B",
+          }}
+        >
+          Open Source AI Data Generator
+        </h1>
+      </header>
+
+      {/* Configuration Container */}
       <div
-        className="bg-metabase-bg rounded-lg shadow-2xl px-4 sm:px-8 py-8 sm:py-12 w-full max-w-full flex flex-col"
-        style={{ minHeight: "60vh" }}
+        className="bg-white w-full flex items-center justify-center"
+        style={{
+          width: "min(864px, 100% - 32px)",
+          borderRadius: "24px",
+          padding: "24px",
+          gap: "12px",
+          border: "1px solid #F1F2F4",
+          boxShadow: "0 1px 2px 0 rgba(16, 24, 40, 0.06)",
+        }}
       >
-        <header className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-metabase-header text-left leading-tight">
-            AI Data Generator
-          </h1>
-        </header>
-        <main className="mb-8">
-          <div className="text-lg text-metabase-subheader leading-loose text-left max-w-2xl mb-8">
-            I want to generate a{" "}
-            <Select
-              value={String(prompt.rowCount)}
-              onValueChange={(value) =>
-                setPrompt((prev) => ({ ...prev, rowCount: Number(value) }))
-              }
+        <div
+          className="text-metabase-subheader text-left"
+          style={{
+            fontFamily: "Lato",
+            fontWeight: 400,
+            fontSize: "24px",
+            lineHeight: "32px",
+            letterSpacing: "0%",
+            verticalAlign: "middle",
+            maxWidth: "min(750px, 100%)",
+            wordWrap: "break-word",
+            overflowWrap: "break-word",
+          }}
+        >
+          I want to generate a{" "}
+          <Select
+            value={String(prompt.rowCount)}
+            onValueChange={(value) =>
+              setPrompt((prev) => ({ ...prev, rowCount: Number(value) }))
+            }
+          >
+            <SelectTrigger
+              className="inline-flex items-center border-0 bg-[#f1f2f4] hover:bg-[#e2e3e6] focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:size-4"
+              style={{
+                fontFamily: "Lato",
+                fontWeight: 700,
+                fontSize: "24px",
+                lineHeight: "32px",
+                letterSpacing: "0%",
+                verticalAlign: "middle",
+                height: "36px",
+                borderRadius: "12px",
+                paddingTop: "2px",
+                paddingRight: "8px",
+                paddingBottom: "2px",
+                paddingLeft: "8px",
+                gap: "8px",
+                minWidth: "fit-content",
+                marginLeft: "4px",
+                marginRight: "4px",
+                marginTop: "4px",
+                marginBottom: "4px",
+                color: "#5A6072",
+              }}
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
-                <SelectValue />
-                <ChevronDownIcon className="text-metabase-blue size-4" />
-              </SelectTrigger>
-              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
-                {rowCountOptions.map((opt) => (
-                  <SelectItem
-                    key={opt}
-                    value={String(opt)}
-                    className="text-sm font-medium hover:bg-gray-50"
-                  >
-                    {opt}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>{" "}
-            row dataset for a{" "}
-            <Select
-              value={prompt.businessType}
-              onValueChange={(value) =>
-                setPrompt((prev) => ({ ...prev, businessType: value }))
-              }
+              <SelectValue />
+              <ChevronDownIcon className="text-gray-700 size-4" />
+            </SelectTrigger>
+            <SelectContent className="bg-white text-gray-700 border border-gray-200 shadow-lg">
+              {rowCountOptions.map((opt) => (
+                <SelectItem
+                  key={opt}
+                  value={String(opt)}
+                  className="text-sm font-medium hover:bg-gray-50"
+                >
+                  {opt}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>{" "}
+          row dataset for a{" "}
+          <Select
+            value={prompt.businessType}
+            onValueChange={(value) =>
+              setPrompt((prev) => ({ ...prev, businessType: value }))
+            }
+          >
+            <SelectTrigger
+              className="inline-flex items-center border-0 bg-[#f1f2f4] hover:bg-[#e2e3e6] focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:size-4"
+              style={{
+                fontFamily: "Lato",
+                fontWeight: 700,
+                fontSize: "24px",
+                lineHeight: "32px",
+                letterSpacing: "0%",
+                verticalAlign: "middle",
+                height: "36px",
+                borderRadius: "12px",
+                paddingTop: "2px",
+                paddingRight: "8px",
+                paddingBottom: "2px",
+                paddingLeft: "8px",
+                gap: "8px",
+                minWidth: "fit-content",
+                marginLeft: "4px",
+                marginRight: "4px",
+                marginTop: "4px",
+                marginBottom: "4px",
+                color: "#5A6072",
+              }}
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
-                <SelectValue />
-                <ChevronDownIcon className="text-metabase-blue size-4" />
-              </SelectTrigger>
-              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
-                {businessTypeOptions.map((opt) => (
-                  <SelectItem
-                    key={opt}
-                    value={opt}
-                    className="text-sm font-medium hover:bg-gray-50"
-                  >
-                    {opt}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>{" "}
-            business, using{" "}
-            <Select
-              value={prompt.schemaType}
-              onValueChange={(value) =>
-                setPrompt((prev) => ({ ...prev, schemaType: value }))
-              }
+              <SelectValue />
+              <ChevronDownIcon className="text-gray-700 size-4" />
+            </SelectTrigger>
+            <SelectContent className="bg-white text-gray-700 border border-gray-200 shadow-lg">
+              {businessTypeOptions.map((opt) => (
+                <SelectItem
+                  key={opt}
+                  value={opt}
+                  className="text-sm font-medium hover:bg-gray-50"
+                >
+                  {opt}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>{" "}
+          business, using{" "}
+          <Select
+            value={prompt.schemaType}
+            onValueChange={(value) =>
+              setPrompt((prev) => ({ ...prev, schemaType: value }))
+            }
+          >
+            <SelectTrigger
+              className="inline-flex items-center border-0 bg-[#f1f2f4] hover:bg-[#e2e3e6] focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:size-4"
+              style={{
+                fontFamily: "Lato",
+                fontWeight: 700,
+                fontSize: "24px",
+                lineHeight: "32px",
+                letterSpacing: "0%",
+                verticalAlign: "middle",
+                height: "36px",
+                borderRadius: "12px",
+                paddingTop: "2px",
+                paddingRight: "8px",
+                paddingBottom: "2px",
+                paddingLeft: "8px",
+                gap: "8px",
+                minWidth: "fit-content",
+                marginLeft: "4px",
+                marginRight: "4px",
+                marginTop: "4px",
+                marginBottom: "4px",
+                color: "#5A6072",
+              }}
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
-                <SelectValue />
-                <ChevronDownIcon className="text-metabase-blue size-4" />
-              </SelectTrigger>
-              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
-                <SelectItem
-                  value="OBT"
-                  className="text-sm font-medium hover:bg-gray-50"
-                >
-                  One Big Table (OBT)
-                </SelectItem>
-                <SelectItem
-                  value="star"
-                  className="text-sm font-medium hover:bg-gray-50"
-                >
-                  Multiple Tables (Star Schema)
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            , covering{" "}
-            <MultiSelect
-              className="inline-block align-baseline !px-0 !py-0"
-              options={timeRangeOptions}
-              value={prompt.timeRange}
-              onChange={(vals: string[]) =>
-                setPrompt((prev) => ({ ...prev, timeRange: vals }))
-              }
-              placeholder="Select year(s)"
-            />{" "}
-            with{" "}
-            <Select
-              value={prompt.growthPattern}
-              onValueChange={(value) =>
-                setPrompt((prev) => ({ ...prev, growthPattern: value }))
-              }
+              <SelectValue />
+              <ChevronDownIcon className="text-gray-700 size-4" />
+            </SelectTrigger>
+            <SelectContent className="bg-white text-gray-700 border border-gray-200 shadow-lg">
+              <SelectItem
+                value="OBT"
+                className="text-sm font-medium hover:bg-gray-50"
+              >
+                One Big Table (OBT)
+              </SelectItem>
+              <SelectItem
+                value="star"
+                className="text-sm font-medium hover:bg-gray-50"
+              >
+                Multiple Tables (Star Schema)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          , covering{" "}
+          <MultiSelect
+            className="inline-block align-baseline !px-0 !py-0"
+            options={timeRangeOptions}
+            value={prompt.timeRange}
+            onChange={(vals: string[]) =>
+              setPrompt((prev) => ({ ...prev, timeRange: vals }))
+            }
+            placeholder="Select year(s)"
+          />{" "}
+          with{" "}
+          <Select
+            value={prompt.growthPattern}
+            onValueChange={(value) =>
+              setPrompt((prev) => ({ ...prev, growthPattern: value }))
+            }
+          >
+            <SelectTrigger
+              className="inline-flex items-center border-0 bg-[#f1f2f4] hover:bg-[#e2e3e6] focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:size-4"
+              style={{
+                fontFamily: "Lato",
+                fontWeight: 700,
+                fontSize: "24px",
+                lineHeight: "32px",
+                letterSpacing: "0%",
+                verticalAlign: "middle",
+                height: "36px",
+                borderRadius: "12px",
+                paddingTop: "2px",
+                paddingRight: "8px",
+                paddingBottom: "2px",
+                paddingLeft: "8px",
+                gap: "8px",
+                minWidth: "fit-content",
+                marginLeft: "4px",
+                marginRight: "4px",
+                marginTop: "4px",
+                marginBottom: "4px",
+                color: "#5A6072",
+              }}
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
-                <SelectValue />
-                <ChevronDownIcon className="text-metabase-blue size-4" />
-              </SelectTrigger>
-              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
-                {growthPatternOptions.map((opt) => (
-                  <SelectItem
-                    key={opt}
-                    value={opt}
-                    className="text-sm font-medium hover:bg-gray-50"
-                  >
-                    {opt}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>{" "}
-            growth,{" "}
-            <Select
-              value={prompt.variationLevel}
-              onValueChange={(value) =>
-                setPrompt((prev) => ({ ...prev, variationLevel: value }))
-              }
+              <SelectValue />
+              <ChevronDownIcon className="text-gray-700 size-4" />
+            </SelectTrigger>
+            <SelectContent className="bg-white text-gray-700 border border-gray-200 shadow-lg">
+              {growthPatternOptions.map((opt) => (
+                <SelectItem
+                  key={opt}
+                  value={opt}
+                  className="text-sm font-medium hover:bg-gray-50"
+                >
+                  {opt}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>{" "}
+          growth,{" "}
+          <Select
+            value={prompt.variationLevel}
+            onValueChange={(value) =>
+              setPrompt((prev) => ({ ...prev, variationLevel: value }))
+            }
+          >
+            <SelectTrigger
+              className="inline-flex items-center border-0 bg-[#f1f2f4] hover:bg-[#e2e3e6] focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:size-4"
+              style={{
+                fontFamily: "Lato",
+                fontWeight: 700,
+                fontSize: "24px",
+                lineHeight: "32px",
+                letterSpacing: "0%",
+                verticalAlign: "middle",
+                height: "36px",
+                borderRadius: "12px",
+                paddingTop: "2px",
+                paddingRight: "8px",
+                paddingBottom: "2px",
+                paddingLeft: "8px",
+                gap: "8px",
+                minWidth: "fit-content",
+                marginLeft: "4px",
+                marginRight: "4px",
+                marginTop: "4px",
+                marginBottom: "4px",
+                color: "#5A6072",
+              }}
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
-                <SelectValue />
-                <ChevronDownIcon className="text-metabase-blue size-4" />
-              </SelectTrigger>
-              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
-                <SelectItem
-                  value="low"
-                  className="text-sm font-medium hover:bg-gray-50"
-                >
-                  low
-                </SelectItem>
-                <SelectItem
-                  value="medium"
-                  className="text-sm font-medium hover:bg-gray-50"
-                >
-                  medium
-                </SelectItem>
-                <SelectItem
-                  value="high"
-                  className="text-sm font-medium hover:bg-gray-50"
-                >
-                  high
-                </SelectItem>
-              </SelectContent>
-            </Select>{" "}
-            variation, and{" "}
-            <Select
-              value={prompt.granularity}
-              onValueChange={(value) =>
-                setPrompt((prev) => ({ ...prev, granularity: value }))
-              }
+              <SelectValue />
+              <ChevronDownIcon className="text-gray-700 size-4" />
+            </SelectTrigger>
+            <SelectContent className="bg-white text-gray-700 border border-gray-200 shadow-lg">
+              <SelectItem
+                value="low"
+                className="text-sm font-medium hover:bg-gray-50"
+              >
+                low
+              </SelectItem>
+              <SelectItem
+                value="medium"
+                className="text-sm font-medium hover:bg-gray-50"
+              >
+                medium
+              </SelectItem>
+              <SelectItem
+                value="high"
+                className="text-sm font-medium hover:bg-gray-50"
+              >
+                high
+              </SelectItem>
+            </SelectContent>
+          </Select>{" "}
+          variation, and{" "}
+          <Select
+            value={prompt.granularity}
+            onValueChange={(value) =>
+              setPrompt((prev) => ({ ...prev, granularity: value }))
+            }
+          >
+            <SelectTrigger
+              className="inline-flex items-center border-0 bg-[#f1f2f4] hover:bg-[#e2e3e6] focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:size-4"
+              style={{
+                fontFamily: "Lato",
+                fontWeight: 700,
+                fontSize: "24px",
+                lineHeight: "32px",
+                letterSpacing: "0%",
+                verticalAlign: "middle",
+                height: "36px",
+                borderRadius: "12px",
+                paddingTop: "2px",
+                paddingRight: "8px",
+                paddingBottom: "2px",
+                paddingLeft: "8px",
+                gap: "8px",
+                minWidth: "fit-content",
+                marginLeft: "4px",
+                marginRight: "4px",
+                marginTop: "4px",
+                marginBottom: "4px",
+                color: "#5A6072",
+              }}
             >
-              <SelectTrigger className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none [&_svg]:inline [&_svg]:ml-0.5 [&_svg]:size-4 [&_[data-slot=select-value]]:text-metabase-blue data-[size=default]:!h-auto relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue">
-                <SelectValue />
-                <ChevronDownIcon className="text-metabase-blue size-4" />
-              </SelectTrigger>
-              <SelectContent className="bg-white text-metabase-blue border border-gray-200 shadow-lg">
-                <SelectItem
-                  value="daily"
-                  className="text-sm font-medium hover:bg-gray-50"
-                >
-                  daily
-                </SelectItem>
-                <SelectItem
-                  value="weekly"
-                  className="text-sm font-medium hover:bg-gray-50"
-                >
-                  weekly
-                </SelectItem>
-                <SelectItem
-                  value="monthly"
-                  className="text-sm font-medium hover:bg-gray-50"
-                >
-                  monthly
-                </SelectItem>
-              </SelectContent>
-            </Select>{" "}
-            granularity.
-          </div>
-          <div className="flex justify-start w-full">
+              <SelectValue />
+              <ChevronDownIcon className="text-gray-700 size-4" />
+            </SelectTrigger>
+            <SelectContent className="bg-white text-gray-700 border border-gray-200 shadow-lg">
+              <SelectItem
+                value="daily"
+                className="text-sm font-medium hover:bg-gray-50"
+              >
+                daily
+              </SelectItem>
+              <SelectItem
+                value="weekly"
+                className="text-sm font-medium hover:bg-gray-50"
+              >
+                weekly
+              </SelectItem>
+              <SelectItem
+                value="monthly"
+                className="text-sm font-medium hover:bg-gray-50"
+              >
+                monthly
+              </SelectItem>
+            </SelectContent>
+          </Select>{" "}
+          granularity.{" "}
+          <div
+            className="float-right"
+            title={!canGenerate ? "Results below" : "Generate data"}
+          >
             <button
-              className="bg-metabase-blue hover:bg-metabase-blue-hover text-white font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
+              className={`font-medium rounded shadow transition-all duration-200 hover:scale-105 disabled:opacity-50 text-sm ${
+                !canGenerate
+                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                  : "bg-metabase-blue hover:bg-metabase-blue-hover text-white"
+              }`}
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
               onClick={handlePreview}
-              disabled={loading}
+              disabled={loading || !canGenerate}
               type="button"
             >
-              Generate Data
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 19V5M5 12l7-7 7 7" />
+              </svg>
             </button>
           </div>
-        </main>
-        <section className="flex-1 flex flex-col">
+        </div>
+      </div>
+
+      {/* Data Display Container */}
+      <div
+        className="w-full flex-1 flex flex-col"
+        style={{
+          width: "min(864px, 100% - 32px)",
+          minHeight: "471px",
+          borderRadius: "24px",
+          padding: "24px",
+          gap: "12px",
+          backgroundColor: "#F9FAFB",
+          border: "1px solid #F1F2F4",
+          boxShadow: "0 1px 2px 0 rgba(16, 24, 40, 0.05)",
+        }}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2
+            className="text-metabase-subheader"
+            style={{
+              fontFamily: "Lato",
+              fontWeight: 700,
+              fontSize: "24px",
+              lineHeight: "32px",
+              letterSpacing: "0%",
+              verticalAlign: "middle",
+            }}
+          >
+            Generated data
+          </h2>
+          <div className="flex gap-2">
+            <ExportButtons
+              data={data}
+              prompt={prompt}
+              toCSV={toCSV}
+              toSQL={toSQL}
+              isMetabaseRunning={isMetabaseRunning}
+              isInstallingMetabase={isInstallingMetabase}
+              startMetabase={startMetabase}
+              stopMetabase={stopMetabase}
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col">
           {loading && (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
@@ -490,16 +733,6 @@ export default function Home() {
             data.tables.length > 0 && (
               <div className="space-y-4">
                 <DataTable data={data} />
-                <ExportButtons
-                  data={data}
-                  prompt={prompt}
-                  toCSV={toCSV}
-                  toSQL={toSQL}
-                  isMetabaseRunning={isMetabaseRunning}
-                  isInstallingMetabase={isInstallingMetabase}
-                  startMetabase={startMetabase}
-                  stopMetabase={stopMetabase}
-                />
               </div>
             )}
           {/* Only show 'No data' if user has previewed and there is no data */}
@@ -508,7 +741,7 @@ export default function Home() {
           (!data || !data.tables || data.tables.length === 0) ? (
             <div className="text-gray-500">No data</div>
           ) : null}
-        </section>
+        </div>
       </div>
     </div>
   );

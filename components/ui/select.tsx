@@ -203,14 +203,35 @@ export function MultiSelect({
     <div className={`relative inline-block ${className}`} ref={ref}>
       <button
         type="button"
-        className="inline-flex items-center gap-1 px-0 py-0 h-auto min-w-0 border-0 bg-transparent text-metabase-blue font-medium !text-lg rounded-none hover:bg-gray-50 focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-px after:bg-metabase-blue"
+        className="inline-flex items-center border-0 bg-[#f1f2f4] hover:bg-[#e2e3e6] focus:ring-0 focus:outline-none focus:shadow-none focus-visible:ring-0 focus-visible:outline-none"
+        style={{
+          fontFamily: "Lato",
+          fontWeight: 700,
+          fontSize: "24px",
+          lineHeight: "32px",
+          letterSpacing: "0%",
+          verticalAlign: "middle",
+          height: "36px",
+          borderRadius: "12px",
+          paddingTop: "2px",
+          paddingRight: "8px",
+          paddingBottom: "2px",
+          paddingLeft: "8px",
+          gap: "8px",
+          minWidth: "fit-content",
+          marginLeft: "4px",
+          marginRight: "4px",
+          marginTop: "4px",
+          marginBottom: "4px",
+          color: "#5A6072",
+        }}
         onClick={() => setOpen((v) => !v)}
       >
         {value.length === 0 ? placeholder : value.join(", ")}
-        <ChevronDownIcon className="text-metabase-blue size-4" />
+        <ChevronDownIcon className="text-gray-700 size-4" />
       </button>
       {open && (
-        <div className="absolute z-50 mt-2 w-40 bg-white text-metabase-blue rounded-md shadow-lg border border-gray-200 p-1 text-sm font-medium">
+        <div className="absolute z-50 mt-2 w-40 bg-white text-gray-700 rounded-md shadow-lg border border-gray-200 p-1 text-sm font-medium">
           {options.map((opt) => (
             <label
               key={opt}
