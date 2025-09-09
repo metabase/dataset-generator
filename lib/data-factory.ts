@@ -33,11 +33,6 @@ export class DataFactory {
   }
 
   public generate(rowCount: number, timeRange: string[], schemaType?: string) {
-    console.log(
-      "🔍 Star Schema Debug: generate called with schemaType =",
-      schemaType
-    );
-
     // Generate entities
     const generatedEntities = this.entityGenerator.generateEntities(rowCount);
 
@@ -46,12 +41,6 @@ export class DataFactory {
       generatedEntities,
       rowCount,
       timeRange
-    );
-
-    console.log("🔍 Debug: eventStream length:", eventStream.length);
-    console.log(
-      "🔍 Debug: generatedEntities length:",
-      Object.keys(generatedEntities).length
     );
 
     // Apply business logic enforcement
@@ -72,26 +61,13 @@ export class DataFactory {
 
     // Generate dimension tables for star schema
     if (schemaType === "Star Schema") {
-      console.log(
-        "🔍 Star Schema Debug: Condition met, schemaType =",
-        schemaType
-      );
-
       // Extract foreign key IDs from fact table
       const foreignKeyIds = this.extractForeignKeyIds(table);
-      console.log(
-        "🔍 Star Schema Debug: foreignKeyIds size:",
-        foreignKeyIds.size
-      );
 
       // Generate dimension tables using the same IDs
       const dimensionTables = this.generateDimensionTablesWithIds(
         generatedEntities,
         foreignKeyIds
-      );
-      console.log(
-        "🔍 Star Schema Debug: dimensionTables length:",
-        dimensionTables.length
       );
 
       return {
@@ -120,10 +96,6 @@ export class DataFactory {
       });
     });
 
-    console.log(
-      "🔍 Star Schema Debug: Extracted foreign key IDs:",
-      Object.fromEntries(foreignKeyIds)
-    );
     return foreignKeyIds;
   }
 
@@ -171,10 +143,6 @@ export class DataFactory {
         entityName = foreignKeyName.replace("_id", "");
       }
 
-      console.log(
-        `🔍 Star Schema Debug: Mapping ${foreignKeyName} to entity ${entityName}`
-      );
-
       // Get the entity spec
       let entitySpec = this.spec.entities.find((e) => e.name === entityName);
       if (!entitySpec) {
@@ -184,16 +152,8 @@ export class DataFactory {
         );
       }
       if (!entitySpec) {
-        console.log(
-          `🔍 Star Schema Debug: No entity spec found for ${entityName} or ${entityName}_dim`
-        );
         return;
       }
-
-      console.log(
-        `🔍 Star Schema Debug: Found entity spec for ${entityName} with columns:`,
-        Object.keys(entitySpec.attributes)
-      );
 
       // Create dimension table with the required IDs
       const dimensionTable = {
@@ -247,8 +207,6 @@ export class DataFactory {
     factTable: any,
     dimensionTables: any[]
   ): any[] {
-    console.log("🔍 Star Schema Debug: Method called!");
-
     // For each foreign key in the fact table, ensure it references an existing ID in the corresponding dimension table
     factTable.rows.forEach((row) => {
       Object.keys(row).forEach((key) => {

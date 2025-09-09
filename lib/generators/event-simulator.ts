@@ -23,13 +23,6 @@ export class EventSimulator {
     const mainEntityName = this.spec.entities[0].name;
     const mainEntityList = entities[mainEntityName];
 
-    console.log("🔍 EventSimulator Debug: mainEntityName:", mainEntityName);
-    console.log(
-      "🔍 EventSimulator Debug: mainEntityList length:",
-      mainEntityList?.length || 0
-    );
-    console.log("🔍 EventSimulator Debug: rowCount:", rowCount);
-
     // Simulation parameters from user input
     const startYear =
       timeRange.length > 0
