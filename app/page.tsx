@@ -8,7 +8,7 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
-  MultiSelect,
+  MultiSelect
 } from "@/components/ui/select";
 import { ChevronDownIcon } from "lucide-react";
 import DataTable from "@/components/DataTable";
@@ -38,7 +38,7 @@ export default function Home() {
     growthPattern: "steady",
     variationLevel: "medium",
     granularity: "daily",
-    context: "",
+    context: ""
   });
   const [data, setData] = useState<GeneratedData | undefined>(undefined);
   const [loading, setLoading] = useState(false);
@@ -60,31 +60,33 @@ export default function Home() {
     "Education",
     "Retail",
     "Manufacturing",
-    "Transportation",
+    "Transportation"
   ];
   const timeRangeOptions = ["2023", "2024", "2025"];
   const growthPatternOptions = ["steady", "spike", "decline"];
 
   // Extract computed dep to satisfy react-hooks/exhaustive-deps
-  const timeRangeKey = useMemo(
-    () => prompt.timeRange.join(","),
-    [prompt.timeRange]
-  );
-
-  useEffect(() => {
-    setData(null);
-    setHasPreviewed(false);
-    setCanGenerate(true);
-  }, [
-    prompt.schemaType,
-    prompt.businessType,
-    prompt.rowCount,
-    timeRangeKey,
-    prompt.growthPattern,
-    prompt.variationLevel,
-    prompt.granularity,
-    // prompt.context,
+  const timeRangeKey = useMemo(() => prompt.timeRange.join(","), [
+    prompt.timeRange
   ]);
+
+  useEffect(
+    () => {
+      setData(null);
+      setHasPreviewed(false);
+      setCanGenerate(true);
+    },
+    [
+      prompt.schemaType,
+      prompt.businessType,
+      prompt.rowCount,
+      timeRangeKey,
+      prompt.growthPattern,
+      prompt.variationLevel,
+      prompt.granularity
+      // prompt.context,
+    ]
+  );
 
   const handlePreview = async () => {
     setHasPreviewed(true);
@@ -96,13 +98,13 @@ export default function Home() {
       rowCount: 10,
       // context: prompt.context,
       isPreview: true,
-      schemaType: prompt.schemaType === "star" ? "Star Schema" : "OBT",
+      schemaType: prompt.schemaType === "star" ? "Star Schema" : "OBT"
     };
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(previewPrompt), // Always preview 10 rows
+        body: JSON.stringify(previewPrompt) // Always preview 10 rows
       });
       if (!response.ok) throw new Error("Failed to generate dataset");
       const result = await response.json();
@@ -134,7 +136,7 @@ export default function Home() {
     );
     try {
       const response = await fetch("/api/metabase/start", {
-        method: "POST",
+        method: "POST"
       });
       if (!response.ok) {
         const err = await response.json();
@@ -177,12 +179,12 @@ export default function Home() {
                     fontWeight: 600,
                     textDecoration: "none",
                     display: "inline-block",
-                    marginLeft: "8px",
+                    marginLeft: "8px"
                   }}
-                  onMouseOver={(e) =>
+                  onMouseOver={e =>
                     (e.currentTarget.style.backgroundColor = "#6BA8E8")
                   }
-                  onMouseOut={(e) =>
+                  onMouseOut={e =>
                     (e.currentTarget.style.backgroundColor = "#509EE3")
                   }
                 >
@@ -265,7 +267,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center p-4 sm:p-8 gap-6">
+    <div className="min-h-screen flex flex-col items-center pt-8 gap-6">
       <Toaster
         position="bottom-right"
         toastOptions={{
@@ -274,10 +276,10 @@ export default function Home() {
             color: "#22242B",
             fontSize: "1rem",
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-            border: "1px solid #E1E5E9",
+            border: "1px solid #E1E5E9"
           },
           success: { icon: "✅" },
-          error: { icon: "❌" },
+          error: { icon: "❌" }
         }}
       />
 
@@ -287,11 +289,11 @@ export default function Home() {
           className="text-left"
           style={{
             fontFamily: "Lato",
-            fontWeight: 900,
+            fontWeight: 700,
             fontSize: "36px",
             lineHeight: "40px",
             letterSpacing: "0%",
-            color: "#22242B",
+            color: "#22242B"
           }}
         >
           Open Source AI Data Generator
@@ -307,7 +309,7 @@ export default function Home() {
           padding: "24px",
           gap: "12px",
           border: "1px solid #F1F2F4",
-          boxShadow: "0 1px 2px 0 rgba(16, 24, 40, 0.06)",
+          boxShadow: "0 1px 2px 0 rgba(16, 24, 40, 0.06)"
         }}
       >
         <div
@@ -321,14 +323,14 @@ export default function Home() {
             verticalAlign: "middle",
             maxWidth: "min(750px, 100%)",
             wordWrap: "break-word",
-            overflowWrap: "break-word",
+            overflowWrap: "break-word"
           }}
         >
           I want to generate a{" "}
           <Select
             value={String(prompt.rowCount)}
-            onValueChange={(value) =>
-              setPrompt((prev) => ({ ...prev, rowCount: Number(value) }))
+            onValueChange={value =>
+              setPrompt(prev => ({ ...prev, rowCount: Number(value) }))
             }
           >
             <SelectTrigger
@@ -352,14 +354,14 @@ export default function Home() {
                 marginRight: "4px",
                 marginTop: "4px",
                 marginBottom: "4px",
-                color: "#5A6072",
+                color: "#5A6072"
               }}
             >
               <SelectValue />
               <ChevronDownIcon className="text-gray-700 size-4" />
             </SelectTrigger>
             <SelectContent className="bg-white text-gray-700 border border-gray-200 shadow-lg">
-              {rowCountOptions.map((opt) => (
+              {rowCountOptions.map(opt => (
                 <SelectItem
                   key={opt}
                   value={String(opt)}
@@ -373,8 +375,8 @@ export default function Home() {
           row dataset for a{" "}
           <Select
             value={prompt.businessType}
-            onValueChange={(value) =>
-              setPrompt((prev) => ({ ...prev, businessType: value }))
+            onValueChange={value =>
+              setPrompt(prev => ({ ...prev, businessType: value }))
             }
           >
             <SelectTrigger
@@ -398,14 +400,14 @@ export default function Home() {
                 marginRight: "4px",
                 marginTop: "4px",
                 marginBottom: "4px",
-                color: "#5A6072",
+                color: "#5A6072"
               }}
             >
               <SelectValue />
               <ChevronDownIcon className="text-gray-700 size-4" />
             </SelectTrigger>
             <SelectContent className="bg-white text-gray-700 border border-gray-200 shadow-lg">
-              {businessTypeOptions.map((opt) => (
+              {businessTypeOptions.map(opt => (
                 <SelectItem
                   key={opt}
                   value={opt}
@@ -419,8 +421,8 @@ export default function Home() {
           business, using{" "}
           <Select
             value={prompt.schemaType}
-            onValueChange={(value) =>
-              setPrompt((prev) => ({ ...prev, schemaType: value }))
+            onValueChange={value =>
+              setPrompt(prev => ({ ...prev, schemaType: value }))
             }
           >
             <SelectTrigger
@@ -444,7 +446,7 @@ export default function Home() {
                 marginRight: "4px",
                 marginTop: "4px",
                 marginBottom: "4px",
-                color: "#5A6072",
+                color: "#5A6072"
               }}
             >
               <SelectValue />
@@ -471,15 +473,15 @@ export default function Home() {
             options={timeRangeOptions}
             value={prompt.timeRange}
             onChange={(vals: string[]) =>
-              setPrompt((prev) => ({ ...prev, timeRange: vals }))
+              setPrompt(prev => ({ ...prev, timeRange: vals }))
             }
             placeholder="Select year(s)"
           />{" "}
           with{" "}
           <Select
             value={prompt.growthPattern}
-            onValueChange={(value) =>
-              setPrompt((prev) => ({ ...prev, growthPattern: value }))
+            onValueChange={value =>
+              setPrompt(prev => ({ ...prev, growthPattern: value }))
             }
           >
             <SelectTrigger
@@ -503,14 +505,14 @@ export default function Home() {
                 marginRight: "4px",
                 marginTop: "4px",
                 marginBottom: "4px",
-                color: "#5A6072",
+                color: "#5A6072"
               }}
             >
               <SelectValue />
               <ChevronDownIcon className="text-gray-700 size-4" />
             </SelectTrigger>
             <SelectContent className="bg-white text-gray-700 border border-gray-200 shadow-lg">
-              {growthPatternOptions.map((opt) => (
+              {growthPatternOptions.map(opt => (
                 <SelectItem
                   key={opt}
                   value={opt}
@@ -524,8 +526,8 @@ export default function Home() {
           growth,{" "}
           <Select
             value={prompt.variationLevel}
-            onValueChange={(value) =>
-              setPrompt((prev) => ({ ...prev, variationLevel: value }))
+            onValueChange={value =>
+              setPrompt(prev => ({ ...prev, variationLevel: value }))
             }
           >
             <SelectTrigger
@@ -549,7 +551,7 @@ export default function Home() {
                 marginRight: "4px",
                 marginTop: "4px",
                 marginBottom: "4px",
-                color: "#5A6072",
+                color: "#5A6072"
               }}
             >
               <SelectValue />
@@ -579,8 +581,8 @@ export default function Home() {
           variation, and{" "}
           <Select
             value={prompt.granularity}
-            onValueChange={(value) =>
-              setPrompt((prev) => ({ ...prev, granularity: value }))
+            onValueChange={value =>
+              setPrompt(prev => ({ ...prev, granularity: value }))
             }
           >
             <SelectTrigger
@@ -604,7 +606,7 @@ export default function Home() {
                 marginRight: "4px",
                 marginTop: "4px",
                 marginBottom: "4px",
-                color: "#5A6072",
+                color: "#5A6072"
               }}
             >
               <SelectValue />
@@ -648,7 +650,7 @@ export default function Home() {
                 borderRadius: "8px",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent: "center"
               }}
               onClick={handlePreview}
               disabled={loading || !canGenerate}
@@ -682,7 +684,7 @@ export default function Home() {
           gap: "12px",
           backgroundColor: "#F9FAFB",
           border: "1px solid #F1F2F4",
-          boxShadow: "0 1px 2px 0 rgba(16, 24, 40, 0.05)",
+          boxShadow: "0 1px 2px 0 rgba(16, 24, 40, 0.05)"
         }}
       >
         <div className="flex items-center justify-between mb-6">
@@ -694,7 +696,7 @@ export default function Home() {
               fontSize: "24px",
               lineHeight: "32px",
               letterSpacing: "0%",
-              verticalAlign: "middle",
+              verticalAlign: "middle"
             }}
           >
             Generated data
