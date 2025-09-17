@@ -148,9 +148,6 @@ export async function POST(req: Request) {
     }
 
     // 2. Generate data using the spec (same for both cached and new specs)
-    console.log("🔍 API Debug: rowCount:", rowCount);
-    console.log("🔍 API Debug: timeRange:", timeRange);
-    console.log("🔍 API Debug: schemaType:", schemaType);
 
     const factory = new DataFactory(spec);
     const generatedData = factory.generate(

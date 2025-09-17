@@ -14,12 +14,19 @@ export default function ExportButtons({
   startMetabase,
   stopMetabase,
 }: ExportData) {
-  // Check if running locally
-  const isLocalhost =
-    typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1" ||
-      window.location.hostname.includes("localhost"));
+  // Check if data is available for styling
+  const hasData = data && data.tables && data.tables.length > 0;
+
+  // Check if running locally - use useState to avoid hydration mismatch
+  const [isLocalhost, setIsLocalhost] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsLocalhost(
+      window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        window.location.hostname.includes("localhost")
+    );
+  }, []);
 
   const handleExport = async (type: "csv" | "sql") => {
     if (data && data.spec && prompt) {
@@ -117,38 +124,108 @@ export default function ExportButtons({
     );
   };
 
+  // Base button classes
+  const baseClasses =
+    "font-medium transition-all duration-200 disabled:opacity-50 text-sm";
+  const dataAvailableClasses =
+    "bg-[#F1F2F4] hover:bg-[#E8E9EB] text-[#509EE3] border border-[#F1F2F4]";
+  const noDataClasses =
+    "bg-[#F1F2F4] hover:bg-[#E8E9EB] text-gray-600 border border-[#F1F2F4]";
+
   return (
-    <div className="flex gap-6 mt-6 flex-wrap">
-      <button
-        onClick={() => handleExport("csv")}
-        className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
-      >
-        Download CSV
-      </button>
-      <button
-        onClick={() => handleExport("sql")}
-        className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
-      >
-        Download SQL
-      </button>
+    <div className="flex gap-2">
+      <div title={!hasData ? "Generate data first" : "Download CSV file"}>
+        <button
+          onClick={() => handleExport("csv")}
+          disabled={!hasData}
+          className={`${baseClasses} ${
+            hasData ? dataAvailableClasses : noDataClasses
+          }`}
+          style={{
+            paddingTop: "6px",
+            paddingRight: "12px",
+            paddingBottom: "6px",
+            paddingLeft: "12px",
+            borderRadius: "8px",
+            gap: "8px",
+            height: "32px",
+            minWidth: "fit-content",
+          }}
+        >
+          Download CSV
+        </button>
+      </div>
+      <div title={!hasData ? "Generate data first" : "Download SQL file"}>
+        <button
+          onClick={() => handleExport("sql")}
+          disabled={!hasData}
+          className={`${baseClasses} ${
+            hasData ? dataAvailableClasses : noDataClasses
+          }`}
+          style={{
+            paddingTop: "6px",
+            paddingRight: "12px",
+            paddingBottom: "6px",
+            paddingLeft: "12px",
+            borderRadius: "8px",
+            gap: "8px",
+            height: "32px",
+            minWidth: "fit-content",
+          }}
+        >
+          Download SQL
+        </button>
+      </div>
       {/* Show Metabase buttons only if running locally */}
       {isLocalhost &&
         (isMetabaseRunning ? (
-          <button
-            onClick={stopMetabase}
-            disabled={isInstallingMetabase}
-            className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
-          >
-            Stop Metabase
-          </button>
+          <div title={!hasData ? "Generate data first" : "Stop Metabase"}>
+            <button
+              onClick={stopMetabase}
+              disabled={isInstallingMetabase || !hasData}
+              className={`${baseClasses} ${
+                hasData ? dataAvailableClasses : noDataClasses
+              }`}
+              style={{
+                paddingTop: "6px",
+                paddingRight: "12px",
+                paddingBottom: "6px",
+                paddingLeft: "12px",
+                borderRadius: "8px",
+                gap: "8px",
+                height: "32px",
+                minWidth: "fit-content",
+              }}
+            >
+              Stop Metabase
+            </button>
+          </div>
         ) : (
-          <button
-            onClick={startMetabase}
-            disabled={isInstallingMetabase}
-            className="bg-white hover:bg-gray-50 text-[#509EE3] border border-[#509EE3] font-medium px-8 py-2 rounded shadow transition-all duration-200 hover:scale-105 min-w-[120px] disabled:opacity-50 text-sm"
+          <div
+            title={
+              !hasData ? "Generate data first" : "Explore data in Metabase"
+            }
           >
-            {isInstallingMetabase ? "Installing..." : "Explore in Metabase"}
-          </button>
+            <button
+              onClick={startMetabase}
+              disabled={isInstallingMetabase || !hasData}
+              className={`${baseClasses} ${
+                hasData ? dataAvailableClasses : noDataClasses
+              }`}
+              style={{
+                paddingTop: "6px",
+                paddingRight: "12px",
+                paddingBottom: "6px",
+                paddingLeft: "12px",
+                borderRadius: "8px",
+                gap: "8px",
+                height: "32px",
+                minWidth: "fit-content",
+              }}
+            >
+              {isInstallingMetabase ? "Installing..." : "Explore in Metabase"}
+            </button>
+          </div>
         ))}
     </div>
   );
