@@ -5,7 +5,6 @@ import { TableFormatter } from "@/lib/formatters/table-formatter";
 import { DataValidator } from "@/lib/validators/data-validator";
 import { DataEnforcer } from "@/lib/enforcers/data-enforcer";
 import { SaaSEnforcer } from "@/lib/enforcers/saas-enforcer";
-import { faker } from "@/lib/utils/faker-utils";
 
 // =================================================================
 // DATA FACTORY IMPLEMENTATION
@@ -61,14 +60,9 @@ export class DataFactory {
 
     // Generate dimension tables for star schema
     if (schemaType === "Star Schema") {
-      // Extract foreign key IDs from fact table
-      const foreignKeyIds = this.extractForeignKeyIds(table);
-
       // Generate dimension tables using all generated entities, not just referenced ones
-      const dimensionTables = this.generateDimensionTablesWithIds(
-        generatedEntities,
-        foreignKeyIds
-      );
+      const dimensionTables =
+        this.generateDimensionTablesWithIds(generatedEntities);
 
       return {
         tables: [table, ...dimensionTables],
@@ -99,19 +93,13 @@ export class DataFactory {
     return foreignKeyIds;
   }
 
-  private generateDimensionTablesWithIds(
-    generatedEntities: any,
-    foreignKeyIds: Map<string, Set<string>>
-  ): any[] {
+  private generateDimensionTablesWithIds(generatedEntities: any): any[] {
     const dimensionTables = [];
 
     // For each entity type, create a dimension table
     Object.entries(generatedEntities).forEach(([entityName, entityList]) => {
       if (!entityList || !Array.isArray(entityList) || entityList.length === 0)
         return;
-
-      // Find the corresponding foreign key name
-      const foreignKeyName = this.findForeignKeyName(entityName);
 
       // Get the entity spec to know the ID column name
       const entitySpec = this.spec.entities.find((e) => e.name === entityName);
