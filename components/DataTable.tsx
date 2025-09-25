@@ -33,9 +33,9 @@ export default function DataTable({ data }: { data: GeneratedData }) {
     const emptyRows =
       minRows - table.rows.length > 0 ? minRows - table.rows.length : 0;
     return (
-      <div className="overflow-x-auto h-full flex flex-col justify-center pb-6 w-full">
+      <div className="overflow-x-auto pb-6 w-full">
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm w-full min-w-max">
-          <table className="w-full h-full text-sm">
+          <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">
                 {columns.map((col) => (
@@ -48,7 +48,7 @@ export default function DataTable({ data }: { data: GeneratedData }) {
                 ))}
               </tr>
             </thead>
-            <tbody className="h-full">
+            <tbody>
               {table.rows.map((row: DataRecord, i: number) => (
                 <tr
                   key={i}

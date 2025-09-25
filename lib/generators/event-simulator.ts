@@ -28,11 +28,16 @@ export class EventSimulator {
       timeRange.length > 0
         ? parseInt(timeRange[0], 10)
         : new Date().getFullYear();
-    const simStartDate = new Date(Date.UTC(startYear, 0, 1));
-    const simDurationDays =
-      timeRange.length > 1
-        ? (parseInt(timeRange[1], 10) - startYear + 1) * 365
-        : 365;
+
+    // Ensure start year is not greater than end year
+    const endYear =
+      timeRange.length > 1 ? parseInt(timeRange[1], 10) : startYear;
+
+    const actualStartYear = Math.min(startYear, endYear);
+    const actualEndYear = Math.max(startYear, endYear);
+
+    const simStartDate = new Date(Date.UTC(actualStartYear, 0, 1));
+    const simDurationDays = (actualEndYear - actualStartYear + 1) * 365;
 
     // Create a "birth date" for each entity to spread them out over time
     const simEndDate = new Date(
