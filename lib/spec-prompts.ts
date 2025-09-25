@@ -269,6 +269,61 @@ const businessTypeInstructions: Record<string, string> = {
       - trip_duration_hours = distance_miles / 50 (average speed)
     - **Analyst-Friendly Context**: Include vehicle details, driver info, trip metrics, and operational costs in every row
   `,
+  Hospitality: `
+    **CRITICAL: Hospitality Business Model Requirements**
+    - **Pricing Structure**:
+      - Standard Room: $100-300/night
+      - Deluxe Room: $250-600/night
+      - Suite: $500-2000/night
+      - Ancillary Services: $20-200 (room service, spa, parking)
+    - **Customer Journey Events**:
+      - booking_created: Customer makes a reservation (avg_per_entity_per_month: 1-3)
+      - check_in: Guest arrives and checks in (avg_per_entity_per_month: 0.8-2.5)
+      - room_service_ordered: Guest orders room service (avg_per_entity_per_month: 0.5-2)
+      - check_out: Guest departs and settles bill (avg_per_entity_per_month: 0.8-2.5)
+      - review_posted: Guest leaves a review (avg_per_entity_per_month: 0.2-0.8)
+      - cancellation: Customer cancels a booking (monthly_rate: 0.1-0.25)
+    - **Required Fields**:
+      - guest_id, guest_name, guest_email, guest_country
+      - booking_id, booking_date, check_in_date, check_out_date, number_of_guests
+      - hotel_id, hotel_name, hotel_location, room_id, room_type, room_rate
+      - total_charge, ancillary_charges, tax_amount, payment_method
+      - booking_status, review_score, review_comment
+    - **Business Logic**:
+      - total_charge = (room_rate * number_of_nights) + ancillary_charges + tax_amount
+      - check_out_date > check_in_date
+      - booking_status: confirmed, checked_in, checked_out, cancelled, no_show
+      - review_score: 1-5 (integer)
+      - room_rate must be realistic for room_type
+    - **Analyst-Friendly Context**: Include guest demographics, booking details, stay information, and financial data in every row
+  `,
+  "Real Estate": `
+    **CRITICAL: Real Estate Business Model Requirements**
+    - **Property Pricing**:
+      - Residential: $100,000 - $2,000,000 (apartments, houses)
+      - Commercial: $500,000 - $10,000,000 (offices, retail spaces)
+      - Rental: $1,000 - $10,000/month
+    - **Real Estate Events**:
+      - property_listed: A new property is available for sale/rent (avg_per_entity_per_month: 0.5-2)
+      - property_viewing: A potential buyer/renter views a property (avg_per_entity_per_month: 2-10)
+      - offer_made: A potential buyer makes an offer (avg_per_entity_per_month: 0.2-1)
+      - contract_signed: A property sale or lease is finalized (avg_per_entity_per_month: 0.1-0.5)
+      - property_sold: A property is sold (monthly_rate: 0.05-0.15)
+      - lease_agreement: A rental agreement is signed (monthly_rate: 0.1-0.3)
+    - **Required Fields**:
+      - property_id, property_type, address, city, state, zip_code, listing_price, square_footage
+      - agent_id, agent_name, client_id, client_name, client_email
+      - offer_amount, contract_date, closing_date, sale_price
+      - lease_start_date, lease_end_date, monthly_rent, security_deposit
+      - transaction_type, transaction_status
+    - **Business Logic**:
+      - sale_price is usually close to listing_price (can be higher or lower).
+      - closing_date > contract_date.
+      - lease_end_date > lease_start_date.
+      - transaction_type: 'sale' or 'rent'.
+      - transaction_status: 'listed', 'under_contract', 'sold', 'rented', 'expired'.
+    - **Analyst-Friendly Context**: Include property details, agent and client information, and transaction data in every row.
+  `,
   Custom: `
     **CRITICAL: Custom Business Model Requirements**
     - **Domain-Specific Pricing**: Adapt pricing to the specific industry described
@@ -465,6 +520,8 @@ Your response must be valid JSON with this structure:
 - **Retail**: Must include customer_id, product_id, store_id, quantity, unit_price. NEVER include subscription_plan
 - **Manufacturing**: Must include product_id, machine_id, work_order_id. NEVER include customer_id, subscription_plan
 - **Transportation**: Must include vehicle_id, driver_id, trip_id. NEVER include product_id, subscription_plan
+- **Hospitality**: Must include guest_id, booking_id, hotel_id, room_id. NEVER include product_id, subscription_plan
+- **Real Estate**: Must include property_id, agent_id, client_id. NEVER include product_id, subscription_plan
 
 **CRITICAL: Example Realistic Values**
 - **B2B SaaS plan_price**: Starter=99, Professional=299, Enterprise=999, Custom=5000
@@ -472,5 +529,7 @@ Your response must be valid JSON with this structure:
 - **Ecommerce product_price**: Electronics=50-2000, Clothing=10-200, Home=20-500
 - **Healthcare procedure_cost**: Primary=50-200, Specialist=150-500, Surgery=5000-50000
 - **Fintech transaction_amount**: Small=1-100, Medium=100-1000, Large=1000-10000
-- **Education course_price**: Free=0, Basic=50-200, Advanced=200-1000, Degree=5000-50000`;
+- **Education course_price**: Free=0, Basic=50-200, Advanced=200-1000, Degree=5000-50000
+- **Hospitality room_rate**: Standard=150, Deluxe=350, Suite=800
+- **Real Estate listing_price**: Residential=250000, Commercial=1200000, Rental=2500`;
 }

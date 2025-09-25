@@ -60,7 +60,9 @@ export default function Home() {
     "Education",
     "Retail",
     "Manufacturing",
-    "Transportation"
+    "Transportation",
+    "Hospitality",
+    "Real Estate"
   ];
   const timeRangeOptions = ["2023", "2024", "2025"];
   const growthPatternOptions = ["steady", "spike", "decline"];
