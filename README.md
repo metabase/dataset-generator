@@ -2,6 +2,8 @@
 
 **Generate realistic datasets for demos, learning, and dashboards. Instantly preview data, export as CSV or SQL, and explore with Metabase.**
 
+> **Want to try it without setup?** We've hosted this tool at [metabase.com/ai-data-generator](https://www.metabase.com/ai-data-generator)
+
 Features:
 
 - Conversational prompt builder: choose business type, schema, row count, and more
