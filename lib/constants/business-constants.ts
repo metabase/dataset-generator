@@ -47,6 +47,18 @@ export const NUMERIC_FIELD_RANGES = [
   { field: "maintenance_cost", min: 50, max: 5000 },
   { field: "safety_score", min: 0, max: 100 },
   { field: "driver_rating", min: 1, max: 5 },
+  { field: "review_score", min: 1, max: 5 },
+  { field: "room_rate", min: 100, max: 2000 },
+  { field: "total_charge", min: 100, max: 5000 },
+  { field: "ancillary_charges", min: 20, max: 200 },
+  { field: "number_of_guests", min: 1, max: 8 },
+  { field: "number_of_nights", min: 1, max: 30 },
+  { field: "listing_price", min: 100000, max: 10000000 },
+  { field: "sale_price", min: 100000, max: 10000000 },
+  { field: "offer_amount", min: 100000, max: 10000000 },
+  { field: "monthly_rent", min: 1000, max: 10000 },
+  { field: "security_deposit", min: 1000, max: 20000 },
+  { field: "square_footage", min: 500, max: 10000 },
   { field: "user_age", min: 18, max: 65 },
   { field: "viral_coefficient", min: 0, max: 5 },
   { field: "content_created_count", min: 0, max: 50 },
@@ -105,6 +117,20 @@ export const DEFAULT_VALUES = {
   shipment_status: ["pending", "in_transit", "delivered", "returned"],
   vehicle_status: ["available", "in_use", "maintenance", "out_of_service"],
   route_status: ["planned", "active", "completed", "cancelled"],
+
+  // Hospitality defaults
+  booking_status: [
+    "confirmed",
+    "checked_in",
+    "checked_out",
+    "cancelled",
+    "no_show",
+  ],
+  room_type: ["standard", "deluxe", "suite", "presidential"],
+
+  // Real Estate defaults
+  property_type: ["residential", "commercial", "industrial", "land"],
+  transaction_status: ["pending", "under_contract", "closed", "cancelled"],
 };
 
 export const COUNTRIES = [
@@ -225,4 +251,6 @@ export const REQUIRED_FIELDS_BY_BUSINESS_TYPE = {
   ],
   Manufacturing: ["product_id", "machine_id", "work_order_id", "event_type"],
   Transportation: ["vehicle_id", "driver_id", "trip_id", "event_type"],
+  Hospitality: ["guest_id", "booking_id", "hotel_id", "room_id", "event_type"],
+  "Real Estate": ["property_id", "agent_id", "client_id", "event_type"],
 };

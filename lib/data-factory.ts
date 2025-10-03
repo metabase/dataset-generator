@@ -48,6 +48,8 @@ export class DataFactory {
       this.dataEnforcer.enforceNumericFields(record);
       this.dataEnforcer.enforceRealisticDefaults(record);
       this.dataEnforcer.enforceHealthcareRules(record);
+      this.dataEnforcer.enforceHospitalityRules(record);
+      this.dataEnforcer.enforceRealEstateRules(record);
       this.dataEnforcer.removePreAggregatedValues(record);
 
       // Apply SaaS-specific rules
