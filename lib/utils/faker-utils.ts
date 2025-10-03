@@ -144,6 +144,30 @@ export function generateFallbackForColumn(
     return faker.string.uuid();
   } else if (lowerName.includes("date")) {
     return faker.date.recent().toISOString();
+  } else if (lowerName.includes("comment") || lowerName.includes("review")) {
+    return faker.lorem.sentence();
+  } else if (
+    lowerName.includes("guests") ||
+    lowerName.includes("guest_count")
+  ) {
+    return faker.number.int({ min: 1, max: 8 });
+  } else if (
+    lowerName.includes("nights") ||
+    lowerName.includes("night_count")
+  ) {
+    return faker.number.int({ min: 1, max: 30 });
+  } else if (lowerName.includes("room_id")) {
+    return `ROOM-${faker.number.int({ min: 100, max: 999 })}`;
+  } else if (
+    lowerName.includes("check_out") ||
+    lowerName.includes("checkout")
+  ) {
+    return faker.date.future({ years: 1 }).toISOString();
+  } else if (
+    lowerName.includes("room_rate") ||
+    lowerName.includes("room_price")
+  ) {
+    return faker.number.int({ min: 100, max: 2000 });
   }
 
   // Education-specific realistic fields

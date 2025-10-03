@@ -144,4 +144,43 @@ _The above costs and behavior are based on testing with the OpenAI GPT-4o model.
 
 ## Extending/Contributing
 
-- To add new business types, edit `lib/spec-prompts.ts` and add entries to the `businessTypeInstructions` object
+### Adding New Business Types
+
+To add new business types, you need to update several files:
+
+1. **Edit `lib/spec-prompts.ts`** - Add entries to the `businessTypeInstructions` object with:
+
+   - Business model requirements and pricing structure
+   - Required fields and business logic
+   - Event types and their frequencies
+
+2. **Edit `lib/constants/business-constants.ts`** - Add realistic numeric ranges:
+
+   ```typescript
+   // Add to NUMERIC_FIELD_RANGES array
+   { field: "your_field", min: 100, max: 1000 },
+
+   // Add to DEFAULT_VALUES object
+   your_field: ["option1", "option2", "option3"],
+
+   // Add to REQUIRED_FIELDS_BY_BUSINESS_TYPE
+   "Your Business Type": ["required_field1", "required_field2", "event_type"],
+   ```
+
+3. **Edit `lib/enforcers/data-enforcer.ts`** - Add business-specific validation rules:
+
+   ```typescript
+   public enforceYourBusinessRules(record: DataRecord): void {
+     // Add validation logic for your business type
+     // e.g., ensure realistic pricing, date relationships, etc.
+   }
+   ```
+
+4. **Update `lib/data-factory.ts`** - Call your new enforcer method:
+
+   ```typescript
+   // In the generate() method, add your enforcer
+   this.dataEnforcer.enforceYourBusinessRules(record);
+   ```
+
+5. **Test your changes** - Generate a preview to ensure realistic data ranges and proper field validation
